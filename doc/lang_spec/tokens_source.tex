@@ -1,0 +1,49 @@
+\subsection{Tokens}
+
+%\begin{figure}
+\begin{small}
+\begin{tabular}{lcl}
+\term{ident}      &::=& \verb"[A-Za-z_][A-Za-z0-9_]*[']*"\\
+\term{num}        &::=& \tok{decnum} \OR \tok{hexnum}\\
+\\
+\tok{decnum}    &::=& \verb"0 | [1-9][0-9]*"\\
+\tok{hexnum}    &::=& \verb"0x[1-9a-f][0-9a-f]*"\\
+\\
+\tok{integer binary operators}
+&::=& \verb"-  +  *  /  %  **"   \\
+\\
+\tok{comparison operators}
+&::=& \verb"<  >  >= <= ==  !=" \\
+\\
+\tok{boolean binary operators}
+&::=& \verb"&&  ||"\\
+\\
+\tok{other operators}
+&::=& \verb"\  @  \union  \intersect" \\
+\\
+\tok{other tokens}
+&::=& \verb"->  <-  \in  ... ^  (  )  [  ] ,  :  =>  =  |  \|  \:  _"   \\
+\\
+\tok{unary operators}
+&::=& \verb"!  ~"   \\
+\\
+\tok{constructors}
+&::=& \verb"\<  \>  \{  \}"\\
+\\
+\tok{reserved keywords}
+&::=& \verb"if  then  else let  val  in  end  case  of  fun  \in" \\
+&   & \verb"assert  true  false  domain  range"  \\
+&   & \verb"int  bool  set  table  seq  graph" \\
+&   & \verb"\min  \max  \argmax  \argmin  \sum  \union  \intersect"
+\\
+\end{tabular}
+\end{small}
+
+\medskip
+Terminals referenced in the grammar are in \term{bold}.
+Other classifiers not referenced within the grammar are
+in \tok{angle brackets and in italics}. \term{ident}, \tok{hexnum} and \tok{decnum} are described using
+regular expressions.\\
+%\caption{Lexical Tokens}
+%\label{fig:tokens}
+%\end{figure}

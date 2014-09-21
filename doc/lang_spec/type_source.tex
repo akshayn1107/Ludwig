@@ -1,0 +1,77 @@
+\section{Type System}
+
+To be completed. However, below I will list 3 thoughts I have on the type system, along with pros and cons of each.
+
+\subsection{Option 1: No Type system}
+
+One idea is to just skip types all together from Ludwig. This will allow us to focus on translation and then rely on the target language compiler to reject the translated code.\\
+
+\textbf{Pros:}
+
+\begin{itemize}
+\item No need to create a typechecker or type system for Ludwig
+
+\item Will rely on the already existing SML (or other target language) typechecker
+\end{itemize}
+
+\textbf{Cons:}
+
+\begin{itemize}
+\item Typechecking problems will be hard to trace. They could be a bug in the translator, a misinterpretation of Ludwig code, or a genuine problem with Ludwig source.
+
+\item Would lead to ambiguous Ludwig source code because all types would need to be inferred (sometimes this could be impossible). This could pose an issue when translating to SML, which does not allow overloaded operators or functions.
+
+\item Translated code that does not compile in one target language may compile in another, depending on the type system of the target language.
+\end{itemize}
+
+\subsection{Option 2: Type System But No Typechecker}
+
+Another idea is to create an SML style type system for Ludwig, but rely on the SML typecheker. This method will remove ambiguities with translation (we can throw a compile time error telling the user to type annotate if code is ambiguous).\\
+
+\textbf{Pros:}
+
+\begin{itemize}
+\item Eliminates the possibility of ambiguous code.
+
+\item Relies on the existing SML (or other target language) typechecker
+\end{itemize}
+
+\textbf{Cons:}
+
+\begin{itemize}
+\item Again, type bugs will be hard to trace. They could be a bug in the translator or a genuine problem with Ludwig source.
+
+\item We cannot guarantee that translated code will be compileable in the target language
+
+\item Pseudocode will need to be typed (this may not actually be a bad thing as it could lead to less ambiguous pseudo code).
+
+\item Need to create and enforce a type system for Ludwig.
+
+\item As before, translated code that does not compile in one target language may compile in another, depending on the type system of that language.
+
+\item The level of ambiguity and type annotations will now be dependent on the target language
+\end{itemize}
+
+\subsection{Option 3: Type System And Typechecker}
+
+This is the most restrictive of the three options. It requires defining a concrete type system for Ludwig (probably a SML style type system) along with a typechecker. This is probably also the cleanest option because it will guarantee that translated code will be valid, comileable SML code (or whatever language we target). This seems to be the best option and the one I will probably go with. It really has no concrete cons associated with it.
+
+\textbf{Pros:}
+
+\begin{itemize}
+\item If code is translated, there can be a guarantee it will compile in the source language (of course this depends on the soundness of the translator).
+
+\item No longer relying on the target language compiler to determine correctness of Ludwig source code.
+
+\item Allows the programmer to be notified of type ambiguities and fix them before the code is translated.
+
+\end{itemize}
+
+\textbf{Cons:}
+\begin{itemize}
+
+\item Pseudocode will need to be typed (this may not actually be a bad thing as it could lead to less ambiguous pseudo code).
+
+\item Need to write a typechecker and come up with typechecking rules (again not really a "con")
+
+\end{itemize}

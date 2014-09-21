@@ -1,0 +1,65 @@
+%\begin{figure}
+\begin{small}
+\begin{tabular}{lcl}
+\term{ident}      &::=& \verb"[A-Za-z_][A-Za-z0-9_]*[']*"\\
+\term{num}        &::=& \tok{decnum} \OR \tok{hexnum}\\
+\\
+\tok{decnum}    &::=& \verb"0 | [1-9][0-9]*"\\
+\tok{hexnum}    &::=& \verb"0x[1-9a-f][0-9a-f]*"\\
+\\
+\tok{integer binary operators}
+&::=& \verb"-  +  *  /  %  **  &  |"   \\
+\\
+\tok{comparison operators}
+&::=& \verb"<  >  >= <= ==  !=  &&  ||" \\
+\\
+\tok{boolean binary operators}
+&::=& \verb"&&  ||"\\
+\\
+\tok{other operators}
+&::=& \verb"\  @" \\
+\\
+\tok{other tokens}
+&::=& \verb"->  <-  \in  ... ^  (  )  [  ] ,  :  =>  ="   \\
+\\
+\tok{unary operators}
+&::=& \verb"!  ~"   \\
+\\
+\tok{constructors}
+&::=& \verb"\<  \>  \{  \}"\\
+\\
+\tok{reserved keywords}
+&::=& \verb"if  then  else let  val  in  end  case  of  fun" \\
+&   & \verb"assert  true  false  domain  range"  \\
+&   & \verb"int  bool  set  table  seq  graph" \\
+&   & \verb"\min_ \min  \max_ \max  \argmax  \argmin  \sum_  \sum"
+\\
+\end{tabular}
+\end{small}
+
+\medskip
+Terminals referenced in the grammar are in \term{bold}.
+Other classifiers not referenced within the grammar are
+in \tok{angle brackets and in italics}. \term{ident}, \tok{hexnum} and \tok{decnum} are described using
+regular expressions.\\
+%\caption{Lexical Tokens}
+%\label{fig:tokens}
+%\end{figure}
+
+\clearpage
+
+\subsection{Thoughts}
+
+\begin{itemize}
+\item Do we need to explicitly put \verb|_| after certain commands (i.e. \verb|\sum| etc) or not? Will the lexer allow variables to have \verb|_| and also make \verb|_| its own token? This is more of a technical detail regarding the compiler itself. Does not affect the language syntax construction too much. Actually this should be okay because SMLNJ uses \verb"_" as both a wildcard and in variables. We should probably enforce \verb"_{" to prevent ambiguities. 
+
+\item Do we use \verb"|" for integer binary or, or do we use it for case statements. Alternative for case statements should we use \verb|;| or something simillar? Or even \verb"\|", but this seems too verbose for the purpose.
+
+\item Once we formalize the grammar of this language, do we want a latex mode? Either there is a direct translation from Ludwig Syntax to latex, in which case we just need to compile with the right macros and we can view the pseudocode nicely (this might make the pseudo code harder to read in ASCII form though). Alternatively, we make it "close" to Latex, but then translate the rest on our own (have a seperate translator into Latex). We could basically have a translator from Ludwig to latex and then also latex to Ludwig. This will formalize both the latex pseudocode and Ludwig syntax and allow seamless transition between the two. Then, we can translate Ludwig syntax to SML/Scala/whatever, or visualize it.
+
+\item Still don't have a good way to represent an arbitrary reduce. Had discussed creating some sort of latex macro to do this nicely.
+
+\item Do we want to support graphs in addition to sets/tables/sequences? If so, we should discuss the syntax for doing this.
+
+\item Type system that enforces termination? i.e. recursion on smaller datatype that approaches base case?
+\end{itemize}

@@ -1,0 +1,78 @@
+\section{Translating Ludwig Syntax}
+
+\subsection{Sequences}
+
+\begin{tabular}{| l l l |}
+\hline
+\textbf{Pseudocode} & \textbf{Ludwig Syntax} & \textbf{SML Syntax}\\
+\hline
+$S[i]$ & \verb"S[i]" & \verb"nth S i"\\
+$|S|$ & \verb"|S|" & \verb"length(S)"\\
+$\langle \rangle$ & \verb".<>." & \verb"empty ()"\\
+$\langle e \rangle$ & \verb".<e>." & \verb"singleton e"\\
+$\langle e_1, e_2, e_3, e_4 \rangle$ & \verb".<e1, e2, e3, e4>." & \verb"fromList [e1, e2, e3, e4]"\\
+$\langle i...j \rangle$ & \verb".<i...j>." & \verb"tabulate (fn k => k + i) (j - i + 1)"\\
+$\langle e : p \in S \rangle$ & \verb".<e .: p <- S>." & \verb"map (fn p => e) S"\\
+$\langle p \in S \mid e \rangle$ & \verb".<p <- S .| e>." & \verb"filter (fn p => e) S"\\
+$\langle e : i \in \langle 0...n - 1 \rangle \rangle$ & \verb".<e .: i <- .<0...n - 1>.>." & \verb"tabulate (fn i => e) n"\\
+$\langle e1 : p \in S \mid e2 \rangle$ & \verb".<e1 .: p <- S .| e2>." & \verb"map (fn p => e) (filter (fn p => e) S)"\\
+$S_1 @ S_2$ & \verb"S1 @ S2" & \verb"append S1 S2"\\
+$\displaystyle \sum_{p \in S}{e}$ & \verb"\sum_{p <- S}{e}" & \verb"reduce add 0 (map (fn p => e) S)"\\
+$\displaystyle \sum{S}$ & \verb"\sum{S}" & \verb"reduce add 0 S"\\
+$\overset{f}{\underset{x \in S}{\reduce}}{e}_{bc}$ & \verb"\reduce_{x <- S}^{f}{e}_{bc}" & \verb"reduce f bc (map (fn x => e) S)"\\
+\hline
+\end{tabular}
+
+\subsection{Sets}
+
+\begin{tabular}{| l l l |}
+\hline
+\textbf{Pseudocode} & \textbf{Ludwig Syntax} & \textbf{SML Syntax}\\
+\hline
+$|S|$ & \verb"|S|" & \verb"length(S)"\\
+$e \in S$ & \verb"e <- S" & \verb"find S e"\\
+$\{\}$ & \verb"{}" & \verb"empty ()"\\
+$\{e\}$ & \verb"{e}" & \verb"singleton e"\\
+$\{e_1, e_2, e_3, e_4\}$ & \verb"{e1, e2, e3, e4}" & \verb"fromSeq (fromList [e1, e2, e3, e4])"\\
+$\{p \in S \mid e\}$ & \verb"{p \in S | e}" & \verb"filter (fn p => e) S"\\
+$S_1 \cup S_2$ & \verb"S1 \union S2" & \verb"union (S1, S2)"\\
+$S_1 \cap S_2$ & \verb"S1 \intersect S2" & \verb"intersection (S1, S2)"\\
+$S_1 \backslash S_2$ & \verb"S1 \ S2" & \verb"different(S1, S2)"\\
+$\displaystyle \sum_{p \in S}{e}$ & \verb"sum({e \: p <- S})" & \verb"reduce add 0 (map (fn p => e) (toSeq S))"\\
+$\displaystyle \sum{S}$ & \verb"sum(S)" & \verb"reduce add 0 (toSeq S)"\\
+$\overset{f}{\underset{x \in S}{\reduce}}{e}_{bc}$ & \verb"\reduce_{x \in S}^{f}{e}_{bc}" & \verb"reduce f bc (map (fn x => e) S)"\\
+\hline
+\end{tabular}
+
+\subsection{Tables}
+
+\begin{tabular}{| l l l |}
+\hline
+\textbf{Pseudocode} & \textbf{Ludwig Syntax} & \textbf{SML Syntax}\\
+\hline
+$T[k]$ & \verb"T[k]" & \verb"valOf (find k T)"\\
+$|T|$ & \verb"|T|" & \verb"size T"\\
+$k \in T$ & \verb"k <- T" & \verb"find T k <> None"\\
+$\{\}$ & \verb"\{\}" & \verb"empty ()"\\
+$\{k \mapsto v\}$ & \verb"\{k -> v\}" & \verb"singleton (k, v)"\\
+$\{k_1 \mapsto v_1, k_2 \mapsto v_2\}$ & \verb"\{k1 -> v1, k2 -> v2\}" & \verb"fromSeq (fromList [(k1, v1), (k2, v2)])"\\
+$\{e : v \in T\}$ & \verb"\{e \: v <- T\}" & \verb"map (fn v => e) T"\\
+$\{e : (k \mapsto v) \in T\}$ & \verb"\{e \: (k -> v) <- T\}" & \verb"mapk (fn (k, v) => e) T"\\
+$\{k \mapsto v : k \in S\}$ & \verb"\{k -> v \: k <- S\}" & \verb"tabulate (fn k => v) S"\\
+$\{v \mid v \in T, e\}$ & \verb"\{v \| v <- T.e\}" & \verb"filter (fn v => e) T"\\
+$\{v \mid (k \mapsto v) \in T, e\}$ & \verb"{v \| (k -> v) <- T.e}" & \verb"filterk (fn (k, v) => e) T"\\
+$\texttt{domain}(T)$ & \verb"domain(T)" & \verb"domain T"\\
+$\texttt{range}(T)$ & \verb"range(T)" & \verb"range T"\\
+$T_1 \cup T_2$ & \verb"T1 \union T2" & \verb"merge (fn (k1, k2) => k2) (T1, T2)"\\
+$T_1 \cap T_2$ & \verb"T1 \intersect T2" & \verb"extract (T1, T2)"\\
+$T_1 \backslash T_2$ & \verb"T1 \ T2" & \verb"erase(T1, T2)"\\
+$\displaystyle \sum_{v \in T}{e}$ & \verb"\sum_{v \in T}{e}" & \verb"reduce add 0 (map (fn v => e) T)"\\
+$\displaystyle \sum{T}$ & \verb"\sum{T}" & \verb"reduce add 0 (T)"\\
+$\displaystyle \sum_{(k -> v) \in T}{e}$ & \verb"\sum_{(k \mapsto v) \in T}{e}" & \verb"reduce add 0 (mapk (fn (k, v) => e) T)"\\
+$\overset{f}{\underset{x \in T}{\reduce}}{e}_{bc}$ & \verb"\reduce_{x \in S}^{f}{e}_{bc}" & \verb"reduce f bc (map (fn x => e) T)"\\
+\hline
+\end{tabular}
+
+\subsection{Graphs}
+
+To be completed.

@@ -1,0 +1,584 @@
+\documentclass[11pt]{article}
+
+\usepackage{fullpage}
+\usepackage{proof}
+\setlength{\inferLineSkip}{4pt}
+\usepackage{latexsym}
+\usepackage[breaklinks=true,
+  colorlinks=true,
+  citecolor=blue,
+  linkcolor=blue,
+  urlcolor=blue]{hyperref}
+
+\begin{document}
+\title{15-411 Compiler Design, Fall 2013\\ Lab 4}
+\author{Instructor: Frank Pfenning\\TAs: Robbie Harwood, Sri Raghavan,
+  Max Serrano}
+\date{Test Programs Due: 11:59pm, Thursday, October 24, 2013\\
+Compilers Due: 11:59pm, Thursday, October 31, 2013}
+\maketitle
+
+% \newcommand{\danger}{\marginpar[\hfill\dbend]{\dbend\hfill}}
+\newcommand{\danger}{\textbf{!!!}}
+
+\newcommand{\nonterm}[1]{$\langle${#1}$\rangle$}
+\newcommand{\tok}[1]{$\langle$\emph{#1}$\rangle$}
+\newcommand{\term}[1]{\textbf {#1}}
+\newcommand{\OR}{\ensuremath{\ | \ \ }}
+
+%% various commands taken from the 15-312 assignment handouts
+\newcommand{\proves}{\vdash}
+
+\newcommand{\G}{\Gamma}
+\newcommand{\cons}[2]{#1, \, #2}
+\newcommand{\typed}[2]{#1 : #2}
+\newcommand{\valid}[1]{#1 \; \mathit{valid}}
+\newcommand{\typof}[3]{{#1} \proves \typed{#2}{#3}}
+
+%% L3
+\newcommand{\tint}{\mathbf{int}}
+\newcommand{\tbool}{\mathbf{bool}}
+\newcommand{\etrue}{\mathbf{true}}
+\newcommand{\efalse}{\mathbf{false}}
+\newcommand{\eintconst}{\mathbf{intconst}}
+\newcommand{\sassn}[2]{\mathbf{assign}(#1, #2)}
+\newcommand{\sif}[3]{\mathbf{if}(#1, #2, #3)}
+\newcommand{\swhile}[2]{\mathbf{while}(#1, #2)}
+\newcommand{\sfor}[4]{\mathbf{for}(#1, #2, #3, #4)}
+\newcommand{\scont}{\mathbf{continue}}
+\newcommand{\sbreak}{\mathbf{break}}
+\newcommand{\sret}[1]{\mathbf{return}(#1)}
+\newcommand{\snop}{\mathbf{nop}}
+\newcommand{\sseq}[2]{\mathbf{seq}(#1, #2)}
+\newcommand{\sdecl}[3]{\mathbf{declare}(#1, #2, #3)}
+
+\newcommand{\snil}{\mathbf{nil}}
+\newcommand{\sextfdecl}[2]{\mathbf{extfdecl}(#1, #2)}
+\newcommand{\sintfdecl}[2]{\mathbf{intfdecl}(#1, #2)}
+\newcommand{\sfun}[3]{\mathbf{fun}(#1, #2, #3)}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+
+The goal of the lab is to implement a complete compiler for the
+language L4.  This language extends L3 with pointers, arrays, and
+structs.  With the ability to store global state, you should be able
+to write a wide variety of interesting programs.  As always,
+correctness is paramount, but you should take care to make sure your
+compiler runs in reasonable time.
+
+% A special ``dangerous bend'' symbol\footnote{See Knuth, The {\TeX}book, 9th
+% printing, 1986} marks some particularly important
+% warnings.  These warnings are about ``epic fail'' issues, not ``interesting
+% suggestions,'' so you \textit{must not} ignore them.  Other issues are
+% important too, so please pay attention to them as well.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{L4 Syntax}
+
+The lexical specification of L4 is changed by adding '\verb'['',
+'\verb']'', '\verb'.'', and '\verb'->'' as lexical tokens; see
+Figure~\ref{fig:tokens}.  Whitespace, token delimiting, and comments
+are unchanged from languages L1, L2, and L3.
+
+\begin{figure}
+\begin{small}
+\begin{tabular}{lcl}
+\term{ident}      &::=& \verb"[A-Za-z_][A-Za-z0-9_]*"\\
+\term{num}        &::=& \tok{decnum} $|$ \tok{hexnum}\\
+\\
+\tok{decnum}    &::=& \verb"0 | [1-9][0-9]*"\\
+\tok{hexnum}    &::=& \verb"0[xX][0-9a-fA-F]+"\\
+\\
+\tok{special characters}
+&::=& \verb"!  ~  -  +  *  /  %  <<  >>"   \\
+&   & \verb"<  >  >= <= ==  !=  &  ^  |  &&  ||" \\
+&   & \verb"=  +=  -=  *=  /=  %=  <<=  >>=  &=  |=  ^=" \\
+&   & \verb"->  .  --  ++  (  |  )  [  ] , ;  ?  :  "   \\
+\\
+\tok{reserved keywords}
+&::=& \verb"struct  typedef  if  else  while  for  continue  break" \\
+&   & \verb"return  assert  true  false  NULL  alloc  alloc_array"  \\
+&   & \verb"int  bool  void  char  string"               \\
+\\
+\end{tabular}
+\end{small}
+
+\medskip
+Terminals referenced in the grammar are in \term{bold}.
+Other classifiers not referenced within the grammar are
+in \tok{angle brackets and in italics}. \term{ident},
+\tok{decnum}, and \tok{hexnum} are described using
+regular expressions.
+\caption{Lexical Tokens}
+\label{fig:tokens}
+\end{figure}
+
+The syntax of L4 is defined by the (no longer context-free!) grammar
+in Figure \ref{fig:grammar-l4}.  Ambiguities in this grammar are
+resolved according to the operator precedence table in
+Figure~\ref{fig:precedence} and the rule that an \texttt{else}
+provides the alternative for the most recent eligible \texttt{if}.
+
+Again, note that this grammer is \emph{not} context free.  Just trying
+to parse this language with a parser generator in a naive way will
+\emph{not} result in correct behavior.  Some hints on how to parse
+this language are provided in the next section.
+
+\begin{figure}
+\renewcommand{\arraystretch}{1.2}
+\begin{small}
+\begin{tabular}{lcl}
+\nonterm{program} & ::= & $\epsilon$ \OR \nonterm{gdecl} \nonterm{program} \\
+
+\nonterm{gdecl} & ::= & \nonterm{fdecl} \OR \nonterm{fdef} \OR \nonterm{typedef} \OR \nonterm{sdecl} \OR \nonterm{sdef} \\
+
+\nonterm{fdecl} & ::= & \nonterm{type} \term{ident} \nonterm{param-list} \term{;} \\
+
+\nonterm{fdef} & ::= & \nonterm{type} \term{ident} \nonterm{param-list} \nonterm{block} \\
+
+\nonterm{param} & ::= & \nonterm{type} \term{ident} \\
+
+\nonterm{param-list-follow} & ::= & $\epsilon$ \OR \term{,} \nonterm{param} \nonterm{param-list-follow} \\
+
+\nonterm{param-list} & ::= & \term{( )} \OR \term{(} \nonterm{param} \nonterm{param-list-follow} \term{)} \\
+
+\nonterm{typedef} & ::= & \term{typedef} \nonterm{type} \term{ident} \term{;} \\
+
+\nonterm{sdecl} & ::= & \term{struct} \term{ident} \term{;} \\
+
+\nonterm{sdef} & ::= & \term{struct} \term{ident} \verb"{" \nonterm{field-list} \verb"}" \term{;} \\
+
+\nonterm{field} & ::= & \nonterm{type} \term{ident} \term{;} \\
+
+\nonterm{field-list} & ::= & $\epsilon$ \OR \nonterm{field} \nonterm{field-list} \\
+
+\nonterm{type} & ::= & \term{int} \OR \term{bool} \OR \term{ident} \OR \term{void}
+\OR \nonterm{type} \term{*} \OR \nonterm{type}\term{[]} \OR \term{struct} \term{ident} \\
+
+\nonterm{block} & ::= & {\bf \verb"{"} \nonterm{stmts} {\bf \verb"}"} \\
+
+\nonterm{decl} & ::= & \nonterm{type} \term{ident} \OR \nonterm{type} \term{ident} \term{=} \nonterm{exp} \\
+
+\nonterm{stmts} & ::= & $\epsilon$ \OR \nonterm {stmt} \nonterm {stmts} \\
+
+\nonterm{stmt} & ::= & \nonterm{simp} \term{;} \OR \nonterm{control} \OR \nonterm{block} \\
+
+\nonterm{simp} & ::= & \nonterm{lvalue} \nonterm{asop} \nonterm{exp} \OR \nonterm{lvalue} \nonterm{postop} \OR \nonterm{decl} \OR \nonterm{exp} \\
+
+\nonterm{simpopt} & ::= & $\epsilon$ \OR \nonterm{simp} \\
+
+\nonterm{lvalue} & ::= & \term{ident} \OR \nonterm{lvalue} \term{.} \nonterm{ident} \OR \nonterm{lvalue} \verb"->" \nonterm{ident} \\
+& \OR & \term{*} \nonterm{lvalue} \OR \nonterm{lvalue} \term{[} \nonterm{exp} \term{]} \OR \term{(} \nonterm{lvalue} \term{)} \\
+
+\nonterm{elseopt} & ::= & $\epsilon$ \OR \term{else} \nonterm{stmt} \\
+
+\nonterm{control} & ::= & \term{if (} \nonterm{exp} \term{)} \nonterm{stmt} \nonterm{elseopt} \OR \term{while (} \nonterm{exp} \term{)} \nonterm{stmt} \\
+& \OR & \term{for (} \nonterm{simpopt} \term{;} \nonterm{exp} \term{;} \nonterm{simpopt} \term{)} \nonterm{stmt} \\
+& \OR & \term{return} \nonterm{exp} \term{;} \OR \term{return} \term{;} \\
+& \OR & \term{assert (} \nonterm{exp} \term{)} \term{;} \\
+
+\nonterm{arg-list-follow} & ::= & $\epsilon$ \OR \term{,} \nonterm{exp} \nonterm{arg-list-follow} \\
+
+\nonterm{arg-list} & ::= & \term{( )} \OR \term{(} \nonterm{exp} \nonterm{arg-list-follow} \term{)} \\
+\nonterm{exp} & ::= &
+        \term{(} \nonterm{exp} \term{)}
+
+  \OR   \term{num} \OR \term{true} \OR \term{false} \OR \term{ident} \OR \term{NULL} \OR \nonterm{unop} \nonterm{exp} \\
+& \OR & \nonterm{exp} \nonterm{binop} \nonterm{exp} \OR \nonterm{exp} \term{?} \nonterm{exp} \term{:} \nonterm{exp} \OR \term{ident} \nonterm{arg-list} \\
+& \OR & \nonterm{exp} \term{.} \term{ident} \OR \nonterm{exp} \verb"->" \term{ident} \OR \term{alloc (} \nonterm{type} \term{)} \OR \term{*} \nonterm{exp} \\
+& \OR & \term{alloc\_array (} \nonterm{type} \term{,} \nonterm{exp} \term{)} \OR \nonterm{exp} \term{[} \nonterm{exp} \term{]} \\
+
+\nonterm{asop} & ::= & \verb"=" \OR \verb"+=" \OR \verb"-=" \OR \verb"*=" \OR \verb"/=" \OR \verb"%="
+\OR \verb"&=" \OR \verb"^=" \OR \verb"|=" \OR \verb"<<=" \OR \verb">>=" \\
+
+\nonterm{binop} & ::= & \verb"+" \OR \verb"-" \OR \verb"*" \OR \verb"/" \OR \verb"%" \OR \verb"<"
+\OR \verb"<=" \OR \verb">" \OR \verb">=" \OR \verb"==" \OR \verb"!=" \\
+& \OR & \verb"&&" \OR \verb"||" \OR \verb"&" \OR \verb"^" \OR \verb"|" \OR \verb"<<" \OR \verb">>" \\
+
+\nonterm{unop} & ::= & \verb"!" \OR \verb"~" \OR \verb"-" \\
+
+\nonterm{postop} & ::= & \verb"++" \OR \verb"--"
+\end{tabular}
+\end{small}
+
+\medskip
+The precedence of unary and binary operators is given in
+Figure~\ref{fig:precedence}.  Non-terminals are in \nonterm{angle
+brackets}. Terminals are in \term{bold}.  The absence of tokens is
+denoted by $\epsilon$.
+\caption{Grammar of L4}
+\label{fig:grammar-l4}
+\end{figure}
+
+\begin{figure}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{llll}
+\hline
+Operator & Associates & Meaning \\
+\hline
+\verb"() [] -> ."       & n/a   & explicit parentheses, array subscript, \\
+                        &       & field dereference, field select \\
+\verb"! ~ - * ++ --"      & right & logical not, bitwise not, unary minus, \\
+					& & pointer dereference, increment, decrement \\
+\verb"* / %"            & left  & integer times, divide, modulo \\
+\verb"+ -"              & left  & integer plus, minus \\
+\verb"<< >>"            & left  & (arithmetic) shift left, right\\
+\verb"< <= > >="        & left  & integer comparison \\
+\verb"== !="            & left  & overloaded equality, disequality \\
+\verb"&"                & left  & bitwise and \\
+\verb"^"                & left  & bitwise exclusive or \\
+\verb"|"                & left  & bitwise or \\
+\verb"&&"               & left  & logical and \\
+\verb"||"               & left  & logical or \\
+\verb"? :"              & right & conditional expression \\
+\verb"= += -= *= /= %=" \\
+\hspace{3em}\verb"&= ^= |= <<= >>=" & right & assignment operators \\
+\hline
+\end{tabular}
+\caption{Precedence of operators, from highest to lowest}
+\label{fig:precedence}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{L4 Elaboration}
+\label{sec:elab}
+
+We will not provide explicit elaboration rules for everything in
+L4. Please note you will need to preserve at least some size
+information during elaboration to generate correct code.
+
+% \vspace*{10em}
+\subsection*{Detail:  L4 syntax is not context-free}
+
+As noted above, the grammar presented for L4 is no longer context free.
+Consider, for example, the statement
+\begin{verbatim}
+  foo * bar;
+\end{verbatim}
+If \verb"foo" is a type name, then this is a declaration of a
+\verb"foo" pointer named \verb"bar". If, however, \verb"foo" is
+\emph{not} a type name, then this is a multiplication expression used
+as a statement.
+
+For those of you using parser combinator libraries, you will be able
+to backtrack from a parse decision based on whether an identifier is a
+type name, so this case should not be a problem.
+
+However, those of you using parser generators will have a harder
+time---the decision whether to shift or reduce could might be made
+well ahead of when an identifier is determined to be a typename or
+not. Solving this ambiguity is a bit tricky; below, we describe two
+approaches.
+
+One way to handle this is to perform an ambiguous parse: use one rule
+to parse both the declaration form and the expression form (hint: an
+existing rule may work!). Then undo an incorrect decision during
+elaboration. This approach will almost certainly involve some other
+adjustment to various pieces of your grammar and lexer. However, if
+you are already performing elaboration in a seperate phase, we believe
+this should be quite manageable.
+
+Another option is to prevent incorrect decisions from being made. New
+type identifiers are introduced at the top level (as a
+\nonterm{gdecl}); you may wish to parse one global declaration at a
+time, with suitable changes to the start-of-parse and end-of-parse
+symbols). With this approach, the lexer can produce different tokens
+for type and non-type identifiers.
+
+This solves the parsing problem, but raises another. The lexer performs
+a lookahead in order to find the longest match. This affects the lexing
+of a token which is used immediately after it is introduced--consider:
+\begin{verbatim}
+  typedef int foo;
+  foo func();
+\end{verbatim}
+In this case, if the parser parses \verb"typedef int foo;" the lexer
+may already have lexed the \verb"foo" at the beginning of the next
+line, so be careful! This approach may involve becoming more familiar
+with the internals of the parser than you desire.
+
+\section{L4 Static Semantics}
+
+\subsection*{Top level declarations}
+
+New in the grammar are struct declarations and definitions.  See
+\href{http://www.cs.cmu.edu/~fp/courses/15411-f13/lectures/15-structs.pdf}{Lecture
+  15} for some static semantics rules.  Not explicitly stated
+there are the following:
+\begin {itemize}
+\item Struct \emph{definitions} obey scoping rules of the other global
+  declarations, that is, they are available only after their point of
+  definition.  However, structs may be \emph{declared} implicitly; see
+  Section 2 of the notes.
+\item Like type definitions, struct declarations and definitions can
+  appear in external files.
+\end {itemize}
+
+\subsection*{Typechecking}
+
+The type checking and static semantics rules for L4 are covered in the
+notes for
+\href{http://www.cs.cmu.edu/~fp/courses/15411-f13/lectures/14-mutable.pdf}{Lecture
+  14} on \emph{Mutable Store} (for pointers and arrays) and
+\href{http://www.cs.cmu.edu/~fp/courses/15411-f13/lectures/15-structs.pdf}{Lecture
+  15} on \emph{Structs}. In addition:
+
+\begin {itemize}
+\item Postfix operators can be applied to destinations. However, there
+  is an additional restriction that statements of the form
+  ${*}d{\mbox{\tt ++}}$ and ${*}d{\mbox{\tt --}}$ are disallowed even
+  though they would fit the grammar.  This is to avoid confusion with
+  the different semantics such a statement would have in C.
+\end {itemize}
+
+\section{L4 Dynamic Semantics}
+
+The dynamic semantics of L4 is covered in the notes for
+\href{http://www.cs.cmu.edu/~fp/courses/15411-f13/lectures/14-mutable.pdf}{Lecture
+  14} on \emph{Mutable Store} (for pointers and arrays) and
+\href{http://www.cs.cmu.edu/~fp/courses/15411-f13/lectures/15-structs.pdf}{Lecture
+  15} on \emph{Structs}.  Increment and decrement statements
+\verb'd++;' and \verb'd--;' can be elaborated to \verb'd += 1;' and
+\verb'd -= 1;', respectively.
+
+For this lab, you should follow the data representations described in
+the lecture notes.  Specifically, booleans should be represent as
+4-byte values that are either 0 or 1.  This should guarantee
+interoperability with the standard library.
+
+For this lab, you do \emph{not} need to lay out structs in a way that
+is compatible with C, but you are encouraged to do so.  You should
+respect the machine's alignment requirements so that integers and
+booleans are aligned at least 0 modulo 4 and addresses at least 0
+modulo 8.  At this point we do not know if we will test this
+provision.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Project Requirements}
+
+For this project, you are required to hand in test cases and a
+complete working compiler for L4 that produces correct target
+programs written in Intel x86-64 assembly language.
+
+We also require that you document your code. Documentation includes
+both inline documentation and a README document which explains the
+design decisions underlying the implementation along with the general
+layout of the sources. If you use publicly available libraries, you
+are required to indicate their use and source in the README file. If
+you are unsure whether it is appropriate to use external code, please
+discuss it with course staff.
+
+When we grade your work, we will use the \verb"gcc" compiler to
+assemble and link the code you generate into executables using the
+provided runtime environment on the lab machines.
+
+Your compiler and test programs must be formatted and handed in via
+Autolab as specified below. For this project, you must also write and
+hand in at least 20 test programs, at least two of which must fail to
+compile, at least two of which must generate a runtime error, and at
+least two of which must execute correctly and return a value.
+
+\subsection*{Test Files}
+
+Test programs should have extension \verb".l4" and start with one of the
+following lines
+
+\begin{tabular}{l@{\hspace{5em}}l}
+\verb"//test return "$i$ & program must execute correctly and return $i$ \\
+\verb"//test exception "$n$ & program must compile but raise runtime exception $n$ \\
+\verb"//test exception " & program must compile but raise \emph{some} runtime exception \\
+\verb"//test error" & program must fail to compile due to an L4 source error
+\end{tabular}
+
+\noindent followed by the program text.  In L4, the exceptions defined
+are \verb"SIGABRT" (6) (assertion failure), \verb"SIGFPE" (8)
+(arithmetic exception), \verb"SIGSEGV" (11) (memory-related exception)
+and \verb"SIGALARM" (14) (timeout).
+
+Since the language now supports function calls, the runtime
+environment contains external functions providing output capabilities
+(see the runtime section for details).  The testing framework may
+decide to take advantage of this.  For a file \texttt{\$test.l4}:
+\begin{itemize}
+% \item If a file \texttt{\$test.l3.in} exists, its contents will be available to
+% the program as input during testing.
+\item If a file \texttt{\$test.l4.out} exists \emph{and the program returns}, the
+output of the program must be identical to the contents of the file for the
+test to pass.
+\end{itemize}
+Please use this capability sparingly, as the behavior of some library
+functions may be implementation dependent.
+
+All test files should be collected into a directory \verb"tests/"
+(containing no other files) and submitted via the Autolab server.
+
+L4 is a sophisticated and reasonably expressive language. You should
+be able to write some very interesting tests, perhaps adapted from the
+programs and libraries you wrote in the 15-122 course on
+\emph{Principles of Imperative Computation} that uses C0.
+
+Please do \emph{not} submit test cases which differ in only small ways
+in terms of the behavior exercised. We would like some fraction of
+your test programs to compute ``interesting'' functions on specific
+values; please briefly describe such examples in a comment in the
+file. Disallowed are programs which compute Fibonacci numbers,
+factorials, greatest common divisors, and minor variants
+thereof. Please use your imagination!
+
+\subsection*{Compiler Files}
+
+The files comprising the compiler itself should be collected in a
+directory \verb"compiler/" which should contain a \verb"Makefile".
+\textbf{Important:} You should also update the \verb"README" file and
+insert a description of your code and algorithms used at the beginning
+of this file.  Even though your code will not be read for grading
+purposes, we may still read it to provide you feedback.  The
+\verb"README" will be crucial information for this purpose.
+
+Issuing the shell command
+\begin{verbatim}
+  % make l4c
+\end{verbatim}
+should generate the appropriate files so that
+\begin{verbatim}
+  % bin/l4c <args>
+\end{verbatim}
+will run your L4 compiler.  The command
+\begin{verbatim}
+  % make clean
+\end{verbatim}
+should remove all binaries, heaps, and other generated files.
+
+\subsection*{Runtime Environment}
+
+Your compiler should accept a command line argument \texttt{-l} which
+must be given the name of a file as an argument. For instance, we will
+be calling your compiler using the following command: \texttt{bin/l4c
+  -l 15411.h0 \$test.l4}. Here, \texttt{15411.h0} is the header file
+mentioned in the elaboration and static semantics sections.
+
+The runtime for this lab contains functions to perform output. The
+output functions write to \texttt{stderr}, while the result of the
+program is printed to \texttt{stdout}. \texttt{15411.h0} contains a
+listing and a small amount of documentation.
+
+The GNU compiler and linker will be used to link your assembly to the
+implementations of the external functions, so you need not worry much
+about the details of calling to external functions. You should ensure
+that the code you generate adheres to the C ABI for Linux on
+x86-64.  In order for the linking to work, you must adhere to the
+following conventions
+\begin{itemize}
+\item External functions must be called as named.
+\item Non-external functions with name $\mathit{name}$ must be called
+  \verb'_c0_'$\mathit{name}$.  This ensures that non-external function
+  names do not accidentally conflict with names from standard library
+  which could cause assembly or linking to fail.
+\item Non-external functions must be exported from (declared to be
+  \emph{global} in) the assembly file you generate, so that our test
+  harness can call them and verify your adherence to the ABI.
+\end{itemize}
+
+The runtime environment defines a function \verb"main()" which calls a
+function \verb"_c0_main()" your assembly code should provide and export.  Your
+compiler will be tested in the standard Linux environment on the lab machines;
+the produced assembly must conform to this environment.
+
+\subsection*{Using the Subversion Repository}
+
+Handin and handout of material is via the course subversion
+repository.
+
+The handout files for this course can be checked out from our
+subversion repository via
+\begin{verbatim}
+  % svn checkout https://svn.concert.cs.cmu.edu/15411-f13/groups/<team>
+\end{verbatim}
+where \verb"<team>" is the name of your team.  You will find materials
+for this lab in the \verb"lab4" subdirectory.  Or, if you have checked
+out \verb"15411-f13/groups/<team>" directory before, you can issue the
+command \verb"svn update" in that directory.
+
+After adding and committing your handin directory to the
+repository with \verb"svn add" and \verb"svn commit"
+you can hand in your tests or compiler through Autolab.
+\begin{verbatim}
+  https://autolab.cs.cmu.edu/15411-f13
+\end{verbatim}
+Once logged into Autolab, navigate to the appropriate assignment and
+select
+\begin{verbatim}
+  Checkout your work for credit
+\end{verbatim}
+from the menu.  It will perform one of
+\begin{verbatim}
+  % svn checkout https://svn.concert.cs.cmu.edu/15411-f13/groups/<team>/lab4/tests
+  % svn checkout https://svn.concert.cs.cmu.edu/15411-f13/groups/<team>/lab4/compiler
+\end{verbatim}
+to obtain the files directories to autograde, depending on whether
+you are handing in your test files or your compiler.
+
+If you are submitting multiple versions, please remember to commit
+your changes to the repository before asking the Autolab server to
+grade them!  And please do not include any compiled files or binaries
+in the repository!
+
+\subsection*{What to Turn In}
+
+Hand in on the Autolab server:
+
+\begin{itemize}
+
+\item At least 20 test cases, at least two of which generate an error,
+  at least two of which raise a runtime exception, and at least two of
+  which return a value.  The directory \verb'tests/' should only
+  contain your test files and be submitted via subversion as described
+  above.  The server will test your test files and notify you if there
+  is a discrepancy between your answer and the outcome of the
+  reference implementation.  You may hand in as many times as you like
+  before the deadline without penalty.  If you feel the reference
+  implementation is in error, please notify the instructors.  The
+  compiled binary for each test case should run in 2 seconds with the
+  reference compiler on the lab machines; we will use a 5 second limit
+  for testing compilers.
+
+  Test cases are due \textbf{11:59pm on Thursday, October 24, 2013}.
+
+\item The complete compiler.  The directory \verb'compiler/' should
+  contain only the sources for your compiler and be submitted via
+  subversion.  The Autolab server will build your compiler, run it on
+  all extant test files, link the resulting assembly files against our
+  runtime system (if compilation is successful), execute the binaries
+  (each with a 5 second time limit), and finally compare the actual
+  with the expected results.  You may hand in as many times as you
+  like before the deadline without penalty.
+
+  Compilers are due \textbf{11:59pm on Thursday, October 31, 2013}.
+
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Notes and Hints}
+
+The rules for struct declarations and definitions are carefully
+engineered so that it should be possible to compute the size and field
+offsets of each struct without referring to anything found later in
+the file. You probably want to store the sizes and field offsets in
+global tables.
+
+Data now can have different sizes, and you need to track this
+information throughout the various phases of compilation.  We suggest
+you read Section 4 of the Bryant/O'Hallaron notes on
+\href{http://www.cs.cmu.edu/~fp/courses/15411-f13/misc/asm64-handout.pdf}{x86-64
+  Machine-Level Programming} available from the course Resources page,
+especially the paragraph on move instructions and the effects of 32
+bit operators in the upper 32 of the 64 bit registers.  Some notes can
+also be found in Section 6 of the notes for Lecture 15.
+
+\end{document}

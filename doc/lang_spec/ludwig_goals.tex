@@ -1,0 +1,120 @@
+\documentclass[11pt]{article}
+
+\usepackage{homework}
+\usepackage{proof}
+\usepackage{hyperref}
+\setlength{\inferLineSkip}{4pt}
+\newcommand{\wild}{\mbox{\tt\char"5F}}
+\input{cmacros}
+
+\newcommand{\assdate}{\today}
+\newcommand{\andrewid}{ananavat}
+\newcommand{\asstitle}{Ludwig}
+\newcommand{\lecturer}{Akshay Nanavati (\andrewid)}
+
+% \newcommand{\danger}{\marginpar[\hfill\dbend]{\dbend\hfill}}
+\newcommand{\danger}{\textbf{!!!}}
+
+\newcommand{\nonterm}[1]{$\langle${#1}$\rangle$}
+\newcommand{\tok}[1]{$\langle$\emph{#1}$\rangle$}
+\newcommand{\term}[1]{\textbf {#1}}
+\newcommand{\OR}{\ensuremath{\ | \ \ }}
+
+%% various commands taken from the 15-312 assignment handouts
+\newcommand{\proves}{\vdash}
+
+\newcommand{\G}{\Gamma}
+\newcommand{\cons}[2]{#1, \, #2}
+\newcommand{\typed}[2]{#1 : #2}
+\newcommand{\valid}[1]{#1 \; \mathit{valid}}
+\newcommand{\typof}[3]{{#1} \proves \typed{#2}{#3}}
+
+%% L3
+\newcommand{\tint}{\mathbf{int}}
+\newcommand{\tbool}{\mathbf{bool}}
+\newcommand{\etrue}{\mathbf{true}}
+\newcommand{\efalse}{\mathbf{false}}
+\newcommand{\eintconst}{\mathbf{intconst}}
+\newcommand{\sassn}[2]{\mathbf{assign}(#1, #2)}
+\newcommand{\sif}[3]{\mathbf{if}(#1, #2, #3)}
+\newcommand{\swhile}[2]{\mathbf{while}(#1, #2)}
+\newcommand{\sfor}[4]{\mathbf{for}(#1, #2, #3, #4)}
+\newcommand{\scont}{\mathbf{continue}}
+\newcommand{\sbreak}{\mathbf{break}}
+\newcommand{\sret}[1]{\mathbf{return}(#1)}
+\newcommand{\snop}{\mathbf{nop}}
+\newcommand{\sseq}[2]{\mathbf{seq}(#1, #2)}
+\newcommand{\sdecl}[3]{\mathbf{declare}(#1, #2, #3)}
+
+\newcommand{\snil}{\mathbf{nil}}
+\newcommand{\sextfdecl}[2]{\mathbf{extfdecl}(#1, #2)}
+\newcommand{\sintfdecl}[2]{\mathbf{intfdecl}(#1, #2)}
+\newcommand{\sfun}[3]{\mathbf{fun}(#1, #2, #3)}
+
+\begin{document}
+\maketitle
+
+\section*{Introduction}
+There are two main aspects to this project. The first is to create a formalization of pseudo code to easily represent any Computer Science algorithm. We call this language Ludwig. The goal of the Ludwig compiler is to translate the pseudo code into both SML and Scala. The second aspect is to create a visualization platform which would be able to run the given algorithm (on a specified input) step by step using a graphical interface. The purpose of this is to be able to see how given algorithms run, rather then just being told what they do. In this phase we can not only include visualization but also display work, span, and/or space as the algorithm runs. This tool could greatly help students in algorithms courses, namely 15-210 where students learn a lot of algorithms and are expected to code them. Sometimes seeing how an algorithm runs can greatly improve understanding and appreciation for it. 
+
+\clearpage
+
+\section*{Ludwig Goals}
+
+\begin{itemize}
+
+\item Create a specification for the Ludwig language based on pseudocode used in 15-210
+
+\item Write a Ludwig compiler (in SML or OCAML); the compiler will translate Ludwig to SML and Scala
+
+\item Write the visualization platform - this will either be an interpreter for Ludwig or a wrapper around SML/Scala that will run the algorithm step by step showing how it is run 
+
+\end{itemize}
+
+\section*{Other Independent Study Goals}
+
+\begin{itemize}
+
+\item Learn Scala
+
+\item Translate the 15210 Lib to Scala
+
+\item Move assignments over to Scala to test the Scala lib 
+
+\end{itemize}
+
+\section*{Progress 1/30/14}
+
+\begin{itemize}
+\item Frontend of the compiler is almmost done. Grammar contains 2 shift reduce conflicts with \verb">" (not sure why; need to figure this out)
+
+\item have a pretty printer to take AST back to Ludwig syntax for debugging purposes
+
+\item have a test script (\verb"run_test_files.py") to run a suite of test files and see the output (could probably be made more sophisticated)
+
+\item written all but 7 sequence library functions in scala 
+\end{itemize}
+
+\subsection*{To Do}
+
+\begin{itemize}
+\item finish 210 sequence lib in scala
+
+\item Fix shift reduce conflicts in grammar
+
+\item add anonymous funcitons to grammar
+
+\item write the translator from AST to target language (SML/Scala for now)
+\end{itemize}
+
+\subsection*{Bugs}
+
+\begin{itemize}
+\item no integer binary or operator (got rid of \verb"|")
+
+\item sequence constructor conflict with \verb">" leading to 2 shift reduce conflicts. this bug is ONLY with \verb">" not \verb"<". Change sequence constructor? Or just restrict comparisons within sequence constructor (this does not seem necesary because \verb"<" gets parsed correctly)?
+
+\item support currying?
+\end{itemize}
+
+\end{document}

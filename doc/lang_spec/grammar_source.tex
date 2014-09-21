@@ -1,0 +1,114 @@
+\subsection{Grammar}
+%\begin{figure}
+\renewcommand{\arraystretch}{1.2}
+\begin{small}
+\begin{tabular}{lcl}
+\nonterm{script} & ::= & \nonterm{stm-list}\\
+\nonterm{exp} & ::= &
+        \nonterm{exp} \verb"[" \nonterm{exp} \verb"]" \OR
+        \verb"|" \nonterm{exp} \verb"|" \OR
+        \verb"\<" \term{num} \term{...} \term{num} \verb"\>" \\
+        & \OR & 
+        \verb"\<" \nonterm{exp-list} \verb"\>" \OR
+        \verb"\<" \nonterm{exp} \verb"\:" \nonterm{var-in} \verb"\>" \\
+        & \OR & 
+        \verb"\<" \nonterm{var-in} \verb"\|" \nonterm{exp} \verb"\>" \OR 
+        \verb"\<" \nonterm{exp} \verb"\:" \nonterm{var-in} \verb"|" \nonterm{exp} \verb"\>" \\
+        & \OR &
+        \verb"\{" \nonterm{exp-list} \verb"\}" \OR
+        \verb"\{" \nonterm{var-in} \verb"\|" \nonterm{exp} \verb"\}" \\
+        & \OR &
+        \verb"\{" \nonterm{exp} \verb"\:" \nonterm{var-in} \verb"\}" \OR
+        \verb"\{" \nonterm{exp} \verb"\:" \nonterm{var-in}  \verb"\|" \nonterm{exp} \verb"\}"\\
+        & \OR &
+        \nonterm{func-app} \OR
+        \term{if} \nonterm{exp} \term{then} \nonterm{exp} \term{else} \nonterm{exp} \\
+        & \OR &
+        \term{var} \OR \term{num} \OR \nonterm{exp} \nonterm{binop} \nonterm{exp} \OR
+        \nonterm{exp} \nonterm{cmpop} \nonterm{exp} \OR
+        \nonterm{unop} \nonterm{exp} \\
+        & \OR &
+        \verb"(" \nonterm{exp} \verb")" \OR
+        \term{let} \nonterm{stm-list} \term{in} \nonterm{exp} \term{end} \OR
+        \nonterm{var-in} \\
+\nonterm{bif} & ::= & 
+        \term{domain} \OR \term{range}\\
+\nonterm{latex-fun} & ::= & 
+        \term{$\backslash$sum} \OR \term{$\backslash$min} \OR \term{$\backslash$max} \OR \term{$\backslash$argmax} \OR \term{$\backslash$argmin}\\
+\nonterm{subscript-opt} & ::= &
+        $\epsilon$ \OR \verb"_" \nonterm{latex-arg}\\
+\nonterm{superscript-opt} & ::= &
+        $\epsilon$ \OR \verb"^" \nonterm{latex-arg}\\
+\nonterm{latex-arg} & ::= &
+        \verb"{" \nonterm{exp} \verb"}" \\
+\nonterm{var} & ::= &
+        \term{ident} \OR \term{ident} \verb":" \nonterm{type}\\
+\nonterm{var-listf} & ::= & 
+        $\epsilon$ \OR \verb"," \nonterm{var} \nonterm{var-listf}\\
+\nonterm{var-list} & ::= &
+        $\epsilon$ \OR \nonterm{var} \nonterm{var-listf}\\
+\nonterm{func-app} & ::= &
+        \term{$\backslash$sum} \nonterm{subscript-opt} \nonterm{superscript-opt} \nonterm{latex-arg} \\
+        & \OR &
+        \term{$\backslash$min} \nonterm{subscript-opt} \nonterm{superscript-opt} \nonterm{latex-arg} \\
+        & \OR &
+        \term{$\backslash$max} \nonterm{subscript-opt} \nonterm{superscript-opt} \nonterm{latex-arg} \\
+        & \OR &
+        \term{$\backslash$argmax} \nonterm{subscript-opt} \nonterm{superscript-opt} \nonterm{latex-arg} \\
+        & \OR &
+        \term{$\backslash$argmin} \nonterm{subscript-opt} \nonterm{superscript-opt} \nonterm{latex-arg} \\
+        & \OR &
+        \term{$\backslash$reduce} \nonterm{subscript-opt} \nonterm{superscript-opt} \nonterm{latex-arg} \nonterm{subscript-opt} \\
+        & \OR & 
+        exp \verb"(" \nonterm{exp-list} \verb")"\\
+\nonterm{stm} & ::= & 
+        \term{val} \nonterm{var} \term{=} \nonterm{exp} \OR
+        \term{val} \verb"(" \nonterm{var} \nonterm{var-listf} \verb")" \term{=} \nonterm{exp} \\
+        & \OR &
+        \term{fun} \term{ident} \term{(} \nonterm{var-list} \term{)} \term{=} \nonterm{exp}\\
+\nonterm{stm-list} & := & $\epsilon$ \OR \nonterm{stm} \nonterm{stm-list}\\
+\nonterm{var-in} & ::= & 
+        \nonterm{exp} \verb"\in" \nonterm{exp}\\
+\nonterm{binop} & ::= & 
+        \verb"+" \OR \verb"-" \OR \verb"*" \OR \verb"/" \OR \verb"%" \OR
+        \verb"&" \OR \verb"&&" \OR \verb"||" \OR \verb"\" \OR \verb"**" \\
+        & \OR & \verb"@" \OR \verb"\union" \OR \verb"\intersect" \\
+\nonterm{unop} & ::= & \verb"~" \OR \verb"!"\\
+\nonterm{cmpop} & ::= & \verb"<" \OR \verb">" \OR \verb"<=" \OR \verb">=" \OR \verb"==" \OR \verb"!=" \\
+\nonterm{exp-listf} & ::= & $\epsilon$ \OR \term{,} \nonterm{exp} \nonterm{exp-listf} \\
+\nonterm{exp-list} & ::= & $\epsilon$ \OR \nonterm{exp} \nonterm{exp-listf} \\
+\nonterm{type} & ::= & \term{int} \OR \term{bool} \OR \term{set} \OR \term{table} \OR \term{seq} \OR \term{graph}\\
+\end{tabular}
+\end{small}
+
+\medskip
+The precedence of unary and binary operators are given below.  Non-terminals are in \nonterm{angle
+brackets}. Terminals are in \term{bold}.  The absence of tokens is
+denoted by $\epsilon$.
+%\caption{Grammar of L4}
+%\label{fig:grammar-l4}
+%\end{figure}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{| lll |}
+\hline
+Operator & Associates & Meaning \\
+\hline
+\verb"() []"            & n/a   & explicit parentheses, sequence or table subscript, \\
+\verb"! ~"              & right & logical not, unary minus \\
+\verb"**"               & left  & exponentiation \\
+\verb"* / %"            & left  & integer times, divide, modulo \\
+\verb"+ -"              & left  & integer plus, minus \\
+\verb"< <= > >="        & left  & integer comparison \\
+\verb"== !="            & left  & overloaded equality, disequality \\
+\verb"&"                & left  & bitwise and, set and table intersection \\
+\verb"|"                & left  & bitwise or, set and table union REMOVED\\
+\verb"\"                & left  & set and table difference\\
+\verb"@"                & left  & sequence append, set union \\
+\verb"^"                & left  & set intersection \\
+\verb"&&"               & left  & logical and \\
+\verb"||"               & left  & logical or \\
+\verb"\in"              & left  & set or sequence membership, iterator \\
+\verb"="                & right & assignment operators \\
+\hline
+\end{tabular}

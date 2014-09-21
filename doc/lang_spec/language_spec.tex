@@ -1,0 +1,73 @@
+\documentclass[11pt]{article}
+
+\usepackage{homework}
+\usepackage{proof}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\setlength{\inferLineSkip}{4pt}
+\newcommand{\wild}{\mbox{\tt\char"5F}}
+\input{cmacros}
+\input{ludwig_macros.tex}
+
+\newcommand{\assdate}{\today}
+\newcommand{\andrewid}{ananavat}
+\newcommand{\asstitle}{Ludwig Language Specification}
+\newcommand{\lecturer}{Akshay Nanavati (\andrewid)}
+
+% \newcommand{\danger}{\marginpar[\hfill\dbend]{\dbend\hfill}}
+\newcommand{\danger}{\textbf{!!!}}
+
+\newcommand{\nonterm}[1]{$\langle${#1}$\rangle$}
+\newcommand{\tok}[1]{$\langle$\emph{#1}$\rangle$}
+\newcommand{\term}[1]{\textbf {#1}}
+\newcommand{\OR}{\ensuremath{\ | \ \ }}
+
+%% various commands taken from the 15-312 assignment handouts
+\newcommand{\proves}{\vdash}
+
+\newcommand{\G}{\Gamma}
+\newcommand{\cons}[2]{#1, \, #2}
+\newcommand{\typed}[2]{#1 : #2}
+\newcommand{\valid}[1]{#1 \; \mathit{valid}}
+\newcommand{\typof}[3]{{#1} \proves \typed{#2}{#3}}
+
+%% L3
+\newcommand{\tint}{\mathbf{int}}
+\newcommand{\tbool}{\mathbf{bool}}
+\newcommand{\etrue}{\mathbf{true}}
+\newcommand{\efalse}{\mathbf{false}}
+\newcommand{\eintconst}{\mathbf{intconst}}
+\newcommand{\sassn}[2]{\mathbf{assign}(#1, #2)}
+\newcommand{\sif}[3]{\mathbf{if}(#1, #2, #3)}
+\newcommand{\swhile}[2]{\mathbf{while}(#1, #2)}
+\newcommand{\sfor}[4]{\mathbf{for}(#1, #2, #3, #4)}
+\newcommand{\scont}{\mathbf{continue}}
+\newcommand{\sbreak}{\mathbf{break}}
+\newcommand{\sret}[1]{\mathbf{return}(#1)}
+\newcommand{\snop}{\mathbf{nop}}
+\newcommand{\sseq}[2]{\mathbf{seq}(#1, #2)}
+\newcommand{\sdecl}[3]{\mathbf{declare}(#1, #2, #3)}
+
+\newcommand{\snil}{\mathbf{nil}}
+\newcommand{\sextfdecl}[2]{\mathbf{extfdecl}(#1, #2)}
+\newcommand{\sintfdecl}[2]{\mathbf{intfdecl}(#1, #2)}
+\newcommand{\sfun}[3]{\mathbf{fun}(#1, #2, #3)}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\clearpage
+
+\input{lang_spec_source.tex}
+
+\input{type_source.tex}
+
+\input{translation_source.tex}
+
+%\input{ast_source.tex}
+
+\end{document}
