@@ -1,5 +1,6 @@
 #!/bin/sh
 
 export OCAMLRUNPARAM='p'
-bin/ludwig $*
+BASEDIR=$(dirname $0)
+$BASEDIR/ludwig $*
 unset OCAMLRUNPARAM
