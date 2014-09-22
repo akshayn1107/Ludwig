@@ -30,12 +30,17 @@ let rec gen_spaces n = match n with
   | 0 -> ""
   | _ -> "  " ^ gen_spaces (n - 1);;
 
+let rec exp_remove_mark e = match e with
+  | Ast.Markede e1 -> exp_remove_mark (Mark.data e1)
+  | _ -> e;;
+
 let var_to_string id = match Symbol.name id with
   | "EMPTY" -> "Seq.EMPTY"
   | "NODE" -> "Seq.NODE"
   | "ELT" -> "Seq.ELT"
   | "merge" -> "Seq.merge"
   | "showt" -> "Seq.showt"
+  | "max" -> assert false
   | s -> s;;
 
 let rec stms_to_str n stms =
@@ -60,7 +65,7 @@ and exp_to_string n e =
         spaces ^ "in\n" ^
         exp_to_string (n + 1) e1 ^ "\n" ^ spaces ^ "end"
     | Ast.Call (e1, e2) -> spaces ^
-        exp_to_string 0 e1 ^ "(" ^ exp_to_string 0 e2 ^ ")"
+        call_to_string e1 e2
     | Ast.Const c -> spaces ^ Int32.to_string c
     | Ast.PosInf -> spaces ^ "valOf (Int.maxInt) (* PosInf *)"
     | Ast.NegInf -> spaces ^ "valOf (Int.minInt) (* NegInf *)"
@@ -83,7 +88,18 @@ and exp_to_string n e =
         exp_to_string 0 e2 ^ ")"
     | Ast.FromList es -> spaces ^
         "Seq.fromList [" ^ Util.list_to_string (exp_to_string 0) es ", " ^ "]"
-    | Ast.Markede e1 -> exp_to_string n (Mark.data e1);;
+    | Ast.Markede e1 -> exp_to_string n (Mark.data e1)
+and call_to_string e1 e2 = match (exp_remove_mark e1, exp_remove_mark e2) with
+  | (Ast.Var (id, _), Ast.Tuple es) -> begin match Symbol.name id with
+    | "max" ->
+        "List.foldl Int.max (valOf (Int.minInt)) [" ^
+        Util.list_to_string (exp_to_string 0) es ", " ^ "]"
+    | "min" ->
+        "List.foldl Int.min (valOf (Int.maxInt)) [" ^
+        Util.list_to_string (exp_to_string 0) es ", " ^ "]"
+    | _ -> var_to_string id ^ (exp_to_string 0 (Ast.Tuple es))
+    end
+  | _ -> exp_to_string 0 e1 ^ "(" ^ exp_to_string 0 e2 ^ ")";;
 
 let generate stms =
   let header = "structure Ludwig =\nstruct\nstructure Seq = ArraySequence\n" in
