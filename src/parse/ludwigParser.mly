@@ -61,6 +61,7 @@ stm :
 exp :
    IDENT                           { marke (A.Var ($1, None)) (1, 1) }
  | INTCONST                        { marke (A.Const ($1)) (1, 1) }
+ | exp PLUS exp                    { marke (A.Binop (Ast.PLUS, $1, $3)) (1, 3) }
  | CASE exp OF rule_list END       { marke (A.Case ($2, $4)) (1, 5) }
  | POSINF                          { marke (A.PosInf) (1, 1) }
  | NEGINF                          { marke (A.NegInf) (1, 1) }
