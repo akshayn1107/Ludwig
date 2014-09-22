@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export OCAMLRUNPARAM='p'
+bin/ludwig $*
+unset OCAMLRUNPARAM
