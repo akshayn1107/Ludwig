@@ -38,6 +38,7 @@ let marks e (left, right) =
 %right UNARY
 %left LPAREN
 %left BAR
+%left IDENT INTCONST
 
 %start program
 
@@ -68,8 +69,10 @@ exp :
  | exp DBLBAR exp                  { marke (A.Par ($1, $3)) (1, 3) }
  | LET stm_list IN exp END         { marke (A.Let ($2, $4)) (1, 5) }
  | tuple                           { $1 }
+ | exp IDENT                       { marke (A.Call ($1, marke (A.Var ($2, None)) (2, 2))) (1, 2) }
+ | exp INTCONST                    { marke (A.Call ($1, marke (A.Const $2) (2, 2))) (1, 2) }
  | exp tuple                       { marke (A.Call ($1, $2)) (1, 2) }
- | SEQCONSL exp_list SEQCONSR         { marke (A.FromList $2) (1, 3) }
+ | SEQCONSL exp_list SEQCONSR      { marke (A.FromList $2) (1, 3) }
  ;
 
 tuple :
