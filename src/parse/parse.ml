@@ -13,5 +13,5 @@ let parse filename =
         let _ = if !ErrorMsg.anyErrors then raise ErrorMsg.Error else () in
         ast)
   with Parsing.Parse_error ->
-    ErrorMsg.error None (Printexc.get_backtrace()); raise ErrorMsg.Error
+    ErrorMsg.error None ("parse error"); raise ErrorMsg.Error
   | Sys_error s -> ErrorMsg.error None s; raise ErrorMsg.Error
