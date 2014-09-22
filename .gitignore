@@ -34,3 +34,6 @@
 *.out
 *.synctex.gz
 *.pdf
+
+#vim
+*.swp
