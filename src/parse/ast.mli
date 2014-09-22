@@ -34,12 +34,3 @@ and stm =
  | Markeds of stm Mark.marked
 
 type program = (stm list)
-
-(* print as source, with redundant parentheses *)
-module type PRINT =
-  sig
-    val pp_exp : exp -> string
-    val pp_stm : stm -> string
-  end
-
-module Print : PRINT
