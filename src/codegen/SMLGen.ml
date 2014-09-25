@@ -10,7 +10,7 @@ let compile_script fname =
     "  " ^ Util.get_fname fname ^ extension in
   let makefile_content =
     "all:\n" ^
-    "\tsml-m " ^ cm_fname ^ "\n" in
+    "\tsmlnj-m " ^ cm_fname ^ "\n" in
   let _ = SafeIO.withOpenOut cm_fname_with_dir
     (fun af -> output_string af cm_content) in
   let _ = SafeIO.withOpenOut (dir ^ "Makefile")
