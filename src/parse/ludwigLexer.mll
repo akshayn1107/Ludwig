@@ -80,8 +80,8 @@ rule initial =
   | "end"       { T.END }
   | "fun"       { T.FUN }
 
-  | "-\\inf"    { T.NEGINF }
-  | "\\inf"     { T.POSINF }
+  | "-inf"    { T.NEGINF }
+  | "inf"     { T.POSINF }
   | decnum as n { number n lexbuf }
 
   | id as name  { let id = Symbol.symbol name in T.IDENT id }
