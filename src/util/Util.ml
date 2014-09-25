@@ -7,7 +7,11 @@ let get_dir s =
   let foldf split s = match split with
     | Str.Text s1 -> s1 ^ s
     | Str.Delim s1 -> s1 ^ s in
-  List.fold_right foldf path "";;
+  let rec list_drop_last l = match l with
+    | [] -> []
+    | [x] -> []
+    | x :: xs -> x :: (list_drop_last xs) in
+  List.fold_right foldf (list_drop_last path) "";;
 
 let get_fname s =
   let path = Str.full_split (Str.regexp "/") s in

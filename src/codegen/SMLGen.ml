@@ -21,7 +21,7 @@ let binop_to_string b = match b with
   | Ast.MINUS -> "-"
   | Ast.TIMES -> "*"
   | Ast.DIVIDEDBY -> "/"
-  | Ast.MODULO -> "%";;
+  | Ast.MODULO -> "mod";;
 
 let unop_to_string u = match u with
   | Ast.NEG -> "~"
