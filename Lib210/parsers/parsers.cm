@@ -1,8 +1,0 @@
-Group
-  signature PARSER
-  functor MkDOTParser
-is
-  $/basis.cm
-  ../sig/signatures.cm
-  ../table/table.cm
-  MkDOTParser.sml
