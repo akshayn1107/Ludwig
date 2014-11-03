@@ -21,7 +21,10 @@ let binop_to_string b = match b with
   | Ast.MINUS -> "-"
   | Ast.TIMES -> "*"
   | Ast.DIVIDEDBY -> "/"
-  | Ast.MODULO -> "mod";;
+  | Ast.MODULO -> "mod"
+  | Ast.UNION -> assert false
+  | Ast.INTERSECT -> assert false
+  ;;
 
 let unop_to_string u = match u with
   | Ast.NEG -> "~"
@@ -40,6 +43,7 @@ let var_to_string id = match Symbol.name id with
   | "ELT" -> "Seq.ELT"
   | "merge" -> "Seq.merge"
   | "showt" -> "Seq.showt"
+  | "reduce" -> "Seq.reduce"
   | "max" -> assert false
   | s -> s;;
 
@@ -66,9 +70,17 @@ and exp_to_string n e =
         exp_to_string (n + 1) e1 ^ "\n" ^ spaces ^ "end"
     | Ast.Call (e1, e2) -> spaces ^
         call_to_string e1 e2
+    | Ast.Nth (e1, e2) -> spaces ^
+        "Seq.nth (" ^ exp_to_string 0 e1 ^ ") (" ^ exp_to_string 0 e2 ^ ")"
     | Ast.Const c -> spaces ^ Int32.to_string c
     | Ast.PosInf -> spaces ^ "valOf (Int.maxInt) (* PosInf *)"
     | Ast.NegInf -> spaces ^ "valOf (Int.minInt) (* NegInf *)"
+    | Ast.Binop (Ast.INTERSECT, e1, e2) -> spaces ^
+        "Set.intersection (" ^ exp_to_string 0 e1 ^ ") (" ^
+        exp_to_string 0 e2 ^ ")"
+    | Ast.Binop (Ast.UNION, e1, e2) -> spaces ^
+        "Set.union (" ^ exp_to_string 0 e1 ^ ") (" ^
+        exp_to_string 0 e2 ^ ")"
     | Ast.Binop (b, e1, e2) -> spaces ^
         exp_to_string 0 e1 ^ " " ^ binop_to_string b ^ " " ^
         exp_to_string 0 e2
@@ -86,8 +98,20 @@ and exp_to_string n e =
     | Ast.Par (e1, e2) -> spaces ^
         "Primitives.par (fn () => " ^ exp_to_string 0 e1 ^ ", fn () => " ^
         exp_to_string 0 e2 ^ ")"
-    | Ast.FromList es -> spaces ^
+    | Ast.SeqFromList es -> spaces ^
         "Seq.fromList [" ^ Util.list_to_string (exp_to_string 0) es ", " ^ "]"
+    | Ast.SeqMap (e1, id, e2) -> spaces ^
+        "Seq.map (fn " ^ var_to_string id ^ " => " ^ exp_to_string 0 e1 ^ ") (" ^
+        exp_to_string 0 e2 ^ ")"
+    | Ast.SeqFilter (e1, id, e2) -> spaces ^
+        "Seq.filter (fn " ^ var_to_string id ^ " => " ^ exp_to_string 0 e1 ^ ") (" ^
+        exp_to_string 0 e2 ^ ")"
+    | Ast.SetFromList es -> spaces ^
+        "Set.fromList [" ^ Util.list_to_string (exp_to_string 0) es ", " ^ "]"
+    | Ast.Op b -> begin match b with
+        | Ast.UNION -> spaces ^ "Set.Union"
+        | Ast.INTERSECT -> spaces ^ "Set.Union"
+        | _ -> spaces ^ "op" ^ binop_to_string b end
     | Ast.Markede e1 -> exp_to_string n (Mark.data e1)
 and call_to_string e1 e2 = match (exp_remove_mark e1, exp_remove_mark e2) with
   | (Ast.Var (id, _), Ast.Tuple es) -> begin match Symbol.name id with

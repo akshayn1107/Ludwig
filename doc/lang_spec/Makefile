@@ -5,6 +5,7 @@
 all:
 	pdflatex --jobname="ludwig_lang_spec" '\input{language_spec.tex}'
 	pdflatex --jobname="ludwig_lang_spec" '\input{language_spec.tex}'
+	open ludwig_lang_spec.pdf
 
 clearlog:
 	rm -f *.aux *.log *.out *.toc

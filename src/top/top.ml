@@ -58,15 +58,19 @@ let main args =
     let ast = Parse.parse source in
     (* let _ = Flag.guard flag_ast
         (fun () -> say (Ast.Print.pp_program ast)) () in *)
-    let code = SMLGen.generate ast in
+    let smlcode = SMLGen.generate ast in
+    let latexcode = LatexGen.generate ast in
 
     (* Output assembly *)
-    let afname = stem source ^ SMLGen.extension in
+    let smlafname = stem source ^ SMLGen.extension in
+    let latexafname = stem source ^ LatexGen.extension in
     let _ = SMLGen.compile_script (stem source) in
     let _ = Flag.guard flag_verbose
-        say ("Writing assembly to " ^ afname ^ " ...") in
-    let _ = SafeIO.withOpenOut afname
-        (fun afstream -> output_string afstream code) in
+        say ("Writing assembly to " ^ smlafname ^ " ...") in
+    let _ = SafeIO.withOpenOut smlafname
+        (fun afstream -> output_string afstream smlcode) in
+    let _ = SafeIO.withOpenOut latexafname
+        (fun afstream -> output_string afstream latexcode) in
     (* Return success status *)
     0
 
@@ -74,7 +78,7 @@ let main args =
     ErrorMsg.Error -> say "Compilation failed"; 1
   | EXIT -> 1
   | Arg.Help x -> prerr_string x; 1
-  | e -> say "Unrecognized exception"; 1
+  | e -> say ("Unrecognized exception: " ^ Printexc.to_string e); 1
 
 
 let test s =

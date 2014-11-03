@@ -43,8 +43,8 @@ rule initial =
     ws+         { initial lexbuf }
   | '\n'        { ParseState.newline (start lexbuf); initial lexbuf }
 
-  | '{'         { T.LBRACE }
-  | '}'         { T.RBRACE }
+  | '['         { T.LBRACKET }
+  | ']'         { T.RBRACKET }
   | '('         { T.LPAREN }
   | ')'         { T.RPAREN }
 
@@ -53,6 +53,8 @@ rule initial =
   | '='         { T.ASSIGN }
 
   | '+'         { T.PLUS }
+  | '@'         { T.APPEND }
+  | '&'         { T.INTERSECT }
   | '-'         { T.MINUS }
   | '*'         { T.STAR }
   | '/'         { T.SLASH }
@@ -71,6 +73,8 @@ rule initial =
 
   | ".<"        { T.SEQCONSL }
   | ">."        { T.SEQCONSR }
+  | ".{"        { T.SETCONSL }
+  | "}."        { T.SETCONSR }
 
   | "case"      { T.CASE }
   | "of"        { T.OF }
@@ -79,6 +83,7 @@ rule initial =
   | "in"        { T.IN }
   | "end"       { T.END }
   | "fun"       { T.FUN }
+  | '#'         { T.OP }
 
   | "-inf"    { T.NEGINF }
   | "inf"     { T.POSINF }

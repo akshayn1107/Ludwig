@@ -6,6 +6,8 @@ type binop =
  | TIMES
  | DIVIDEDBY
  | MODULO
+ | UNION
+ | INTERSECT
 
 type unop =
    NEG
@@ -17,6 +19,8 @@ type lud_type =
 type exp =
    Let of stm list * exp
  | Call of exp * exp
+ | Nth of exp * exp
+ | Op of binop
  | Const of int32
  | PosInf
  | NegInf
@@ -26,7 +30,10 @@ type exp =
  | Tuple of exp list
  | Case of exp * ((exp * exp) list)
  | Par of exp * exp
- | FromList of exp list
+ | SeqFromList of exp list
+ | SeqMap of exp * ident * exp
+ | SeqFilter of exp * ident * exp
+ | SetFromList of exp list
  | Markede of exp Mark.marked
 and stm =
    Assign of exp * exp

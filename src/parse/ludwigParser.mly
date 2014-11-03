@@ -14,7 +14,7 @@ let marks e (left, right) =
 %token SEMI
 %token <Int32.t> INTCONST
 %token <Symbol.symbol> IDENT
-%token LBRACE RBRACE
+%token LBRACKET RBRACKET
 %token LPAREN RPAREN
 %token TILDA
 %token ASSIGN
@@ -22,22 +22,27 @@ let marks e (left, right) =
 %token STAR SLASH
 %token PERCENT LARROW
 %token BAR DBLBAR
+%token APPEND INTERSECT
+%token OP
 %token COMMA
 %token ELIPSES CONSMAP CONSFILTER
 %token MATCHARROW
-%token SEQCONSL SEQCONSR
+%token SEQCONSL SEQCONSR SETCONSL SETCONSR
 %token CASE OF LET VAL
 %token IN END FUN
 %token NEGINF POSINF
+%token REDUCE
 
 %type <Ast.stm list> program
 
 %left DBLBAR
 %left PLUS MINUS
 %left STAR SLASH PERCENT
+%left APPEND INTERSECT
 %right UNARY
 %left LPAREN
 %left BAR
+%left LBRACKET RBRACKET
 %left IDENT INTCONST
 
 %start program
@@ -62,21 +67,36 @@ stm :
 exp :
    IDENT                           { marke (A.Var ($1, None)) (1, 1) }
  | INTCONST                        { marke (A.Const ($1)) (1, 1) }
- | exp PLUS exp                    { marke (A.Binop (Ast.PLUS, $1, $3)) (1, 3) }
+ | exp LBRACKET exp RBRACKET       { marke (A.Nth($1, $3)) (1, 4) }
+ | exp PLUS exp                    { marke (A.Binop (A.PLUS, $1, $3)) (1, 3) }
+ | exp APPEND exp                  { marke (A.Binop (A.UNION, $1, $3)) (1, 3) }
+ | exp INTERSECT exp               { marke (A.Binop (A.INTERSECT, $1, $3)) (1, 3) }
  | CASE exp OF rule_list END       { marke (A.Case ($2, $4)) (1, 5) }
  | POSINF                          { marke (A.PosInf) (1, 1) }
  | NEGINF                          { marke (A.NegInf) (1, 1) }
  | exp DBLBAR exp                  { marke (A.Par ($1, $3)) (1, 3) }
  | LET stm_list IN exp END         { marke (A.Let ($2, $4)) (1, 5) }
  | tuple                           { $1 }
- | exp IDENT                       { marke (A.Call ($1, marke (A.Var ($2, None)) (2, 2))) (1, 2) }
- | exp INTCONST                    { marke (A.Call ($1, marke (A.Const $2) (2, 2))) (1, 2) }
+ | exp IDENT                       { marke (A.Call ($1, marke (A.Tuple [A.Var ($2, None)]) (2, 2))) (1, 2) }
+ | exp INTCONST                    { marke (A.Call ($1, marke (A.Tuple [A.Const $2]) (2, 2))) (1, 2) }
  | exp tuple                       { marke (A.Call ($1, $2)) (1, 2) }
- | SEQCONSL exp_list SEQCONSR      { marke (A.FromList $2) (1, 3) }
+ | SEQCONSL exp_list SEQCONSR      { marke (A.SeqFromList $2) (1, 3) }
+ | SEQCONSL exp CONSMAP IDENT LARROW exp SEQCONSR
+                                   { marke (A.SeqMap ($2, $4, $6)) (1, 7) }
+ | SEQCONSL IDENT LARROW exp CONSFILTER exp SEQCONSR
+                                   { marke (A.SeqFilter ($6, $2, $4)) (1, 7) }
+ | SETCONSL exp_list SETCONSR      { marke (A.SetFromList $2) (1, 3) }
+ | opfun                           { $1 }
  ;
 
 tuple :
    LPAREN exp_list RPAREN          { A.Tuple $2 }
+ ;
+
+opfun :
+   OP PLUS                         { marke (A.Op (A.PLUS)) (1, 2) }
+ | OP APPEND                       { marke (A.Op (A.UNION)) (1, 2) }
+ | OP INTERSECT                    { marke (A.Op (A.INTERSECT)) (1, 2) }
  ;
 
 exp_listf :
