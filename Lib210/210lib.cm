@@ -1,0 +1,27 @@
+Library
+  library(210basis.cm)
+  group(sig/signatures.cm)
+  group(util/util.cm)
+  group(elements/elements.cm)
+  group(sequence/sequence.cm)
+  group(table/table.cm)
+  group(pq/pq.cm)
+  group(parsers/parsers.cm)
+
+  signature RANDOM210
+  structure Random210
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+  210basis.cm
+
+  util/util.cm
+  sig/signatures.cm
+  elements/elements.cm
+  sequence/sequence.cm
+  bst/bst.cm
+  table/table.cm
+  pq/pq.cm
+  parsers/parsers.cm
+
+  Random210.sml

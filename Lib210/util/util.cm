@@ -1,0 +1,14 @@
+Group
+  functor MkRegEx
+  signature REGEX
+  signature PRIMITIVES
+  structure Primitives
+  signature TESTER
+  structure Tester
+is
+  $/basis.cm
+  ../sig/signatures.cm
+
+  Primitives.sml
+  MkRegEx.sml
+  Tester.sml
