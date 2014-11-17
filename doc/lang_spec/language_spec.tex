@@ -1,4 +1,5 @@
 \documentclass[11pt]{article}
+\setlength{\parindent}{0pt}
 
 \usepackage{homework}
 \usepackage{proof}
@@ -54,6 +55,7 @@
 \newcommand{\sextfdecl}[2]{\mathbf{extfdecl}(#1, #2)}
 \newcommand{\sintfdecl}[2]{\mathbf{intfdecl}(#1, #2)}
 \newcommand{\sfun}[3]{\mathbf{fun}(#1, #2, #3)}
+\newcommand{\ind}{\-\hspace{0.25in}}
 
 \begin{document}
 \maketitle
@@ -64,9 +66,11 @@
 
 \input{lang_spec_source.tex}
 
-\input{type_source.tex}
-
 \input{translation_source.tex}
+
+\input{coding.tex}
+
+\input{developing.tex}
 
 %\input{ast_source.tex}
 

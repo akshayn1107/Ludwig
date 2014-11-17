@@ -1,0 +1,37 @@
+\section{Coding in Ludwig}
+
+All data structure operations are described above in the translation tables. Here, we describe other expressions and their meaning in the language. Unless otherwise stated, $e_i$ represents an arbitrary expression.
+
+\subsection{Operators}
+\begin{tabular}{| l l |}
+\hline
+\textbf{Expression} & \textbf{Meaning}\\
+\hline
+$e_1$ \verb|+| $e_2$ & Numerical addition\\
+$e_1$ \verb|*| $e_2$ & Numerical multiplication\\ 
+$e_1$ \verb|/| $e_2$ & Numerical divide\\
+$e_1$ \verb|%| $e_2$ & Numerical modulo\\ 
+$e_1$ \verb|\| $e_2$ & Set difference\\
+$e_1$ \verb|@| $e_2$ & Set union\\
+$e_1$ \verb|&| $e_2$ & Set intersection\\
+$e_1$ \verb|and| $e_2$ & Boolean and\\
+$e_1$ \verb|or| $e_2$ & Boolean or\\
+\hline
+\end{tabular}
+
+\subsection{Other Expressions}
+\verb|let val x1 = | $e_1$ \verb| ... val xn = | $e_n$ \verb|in e|\\
+
+SML-like let statement where \verb|xi| are all valid identifiers and $e_i$ are valid expressions. This expression evaluates $e$ given the variable bindings within \verb|let...in|. Note that variables are only scoped within their given \verb|let...in| statement.\\
+
+\verb|case | $e$ \verb| of p1 => | $e_1$ \verb" | ... | pn => " $e_n$ \verb| end|\\
+
+This is a case statement which pattern matches $e$ to the patterns \verb|pi| picking the first branch that hits and executing the given expression. Note that unlike SML, case statements in Ludwig are terminated by an end. Right now, valid patters are identifiers or potentially nested tuples of identifiers. Because the language is not type checked, other valid patterns may compile but will probably produce bad code.\\
+
+\verb|inf/-inf|\\
+
+Represents positive/negative infinity, or max int/min int respectively.\\
+
+\verb|#+, #*, #/, #-, #@, #&|\\
+
+The \verb|#| token takes a binary operator and returns a binary function which takes two inputs and returns an output. This behaves exactly like \verb|op| in SML. Useful to pass as arguments to \verb|map| or \verb|reduce| operations. For example, \verb|x + y| is equivalent to saying \verb|#+(x, y)|.

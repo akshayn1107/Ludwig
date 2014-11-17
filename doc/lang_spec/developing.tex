@@ -1,0 +1,46 @@
+\section{Developing Ludwig}
+
+Fork https://github.com/akshayn1107/Ludwig and clone it to get all the source files.
+
+\subsection{Directory Structure}
+
+\verb|doc/lang_spec/| - Source files for this document.\\
+
+\verb|src/| - Source files for the Ludwig Compiler\\
+\ind \verb|bin/| - Location of compiled Ludwig compiler\\
+\ind \ind \verb|db_ludwig| - A shell script which sets some OCAML flags to run the compiler in debug mode. Currently this just prints out the parse tree at each parse state when the mlyacc parses the file\\
+\ind \verb|codegen/| - The language generation files for Ludwig. So far only contains a translator for Latex and SML\\
+\ind \verb|parse/| - Contains the lexer, parser, and ast modules for the compiler\\
+\ind \verb|top/| - Contains the top level entry function into the compiler (\verb|top.ml|)\\
+\ind \verb|util/| - Contains utility modules used throughout the compiler code\\
+\ind \verb|Makefile| - Compiles the ludwig source code. See \ref{compilation} for more details\\
+
+\subsection{Codegen}
+
+Writing translations from Ludwig to other languages is not too difficult. It simply requires writing a module which exports a \verb|generate : stm list -> string| function which pretty prints source code. Then \verb|top/top.ml| must be updated to call this new generate function.
+
+\subsection{Adding Language Features}
+
+Depending on the scope of the feature, different portions of the compiler may need to be updated. This tutorial will show how to add a new unary operator \verb|!| to the language which acts as a no-op.\\
+
+First, \verb|src/parse/ludwigLexer.mll| must register \verb|!| as a valid token. We can then add this token (lets call it NOOP) to the list of tokens in \verb|src/parse/ludwigParser.mly|. Now, we must create an AST node for this new operator. Because this operator is an expression, we will add a field to the \verb|exp| datatype. Note that the signature must be updated as well. We will add \verb|NOOP of exp| to the datatype. Now, we may add this operator into the syntax of the language. We can do this by extending the grammar to adding:
+\verb"| NOOP exp { marke (A.NOOP($2)) (1, 2) }" to the exp list.\\
+
+Now, all thats left to do is to augment the code generation modules to translate this new operator correctly.\\
+
+\subsection{Compiling}
+\label{compilation}
+Run \verb|make ludwig| in order to get the binary in \verb|bin/ludwig|.
+
+\subsection{Compiling Ludwig Source}
+Once the ludwig compiler has been built, source code can be compiled. Either run:\\
+
+\verb|bin/ludwig [OPTIONS] <source_file.lud>| or\\
+\verb|bin/db_ludwig [OPTIONS] <source_file.lud>|.\\
+
+Options are listed below:
+
+\begin{itemize}
+\item \verb|-v, --verbose| print messages at each stage of compilation
+\item \verb|--debug-parse| debug the parser
+\end{itemize}

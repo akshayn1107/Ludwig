@@ -7,31 +7,25 @@
 \term{num}        &::=& \tok{decnum} \OR \tok{hexnum}\\
 \\
 \tok{decnum}    &::=& \verb"0 | [1-9][0-9]*"\\
-\tok{hexnum}    &::=& \verb"0x[1-9a-f][0-9a-f]*"\\
 \\
 \tok{integer binary operators}
-&::=& \verb"-  +  *  /  %  **"   \\
+&::=& \verb"-  +  *  /  %"   \\
 \\
-\tok{comparison operators}
+\tok{TODO: comparison operators}
 &::=& \verb"<  >  >= <= ==  !=" \\
+\\
+\tok{TODO: boolean binary operators}
+&::=& \verb"and  or"\\
 \\
 \tok{other operators}
 &::=& \verb"\  @  &" \\
-\\
-\tok{other tokens}
-&::=& \verb"->  <-  ...  ^  (  )  [  ] ,  :  =>  =  ||  .|  .:  _"   \\
-\\
-\tok{unary operators}
-&::=& \verb"!  ~  #"   \\
 \\
 \tok{constructors}
 &::=& \verb".<  >.  .{  }."\\
 \\
 \tok{reserved keywords}
-&::=& \verb"if  then  else let  val  in  end  case  of  fun  \in" \\
-&   & \verb"assert  true  false  domain  range"  \\
-&   & \verb"int  bool  set  table  seq  graph" \\
-&   & \verb"\min  \max  \argmax  \argmin  \sum  \union  \intersect"
+&::=& \verb"let  val  in  end  case  of  fun  \in" \\
+&   & \verb"inf"  \\
 \\
 \end{tabular}
 \end{small}

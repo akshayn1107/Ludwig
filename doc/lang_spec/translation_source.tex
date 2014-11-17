@@ -17,9 +17,7 @@ $\langle p \in S \mid e \rangle$ & \verb".<p <- S .| e>." & \verb"filter (fn p =
 $\langle e : i \in \langle 0...n - 1 \rangle \rangle$ & \verb".<e .: i <- .<0...n - 1>.>." & \verb"tabulate (fn i => e) n"\\
 $\langle e1 : p \in S \mid e2 \rangle$ & \verb".<e1 .: p <- S .| e2>." & \verb"map (fn p => e) (filter (fn p => e) S)"\\
 $S_1 @ S_2$ & \verb"S1 @ S2" & \verb"append S1 S2"\\
-$\displaystyle \sum_{p \in S}{e}$ & \verb"\sum_{p <- S}{e}" & \verb"reduce add 0 (map (fn p => e) S)"\\
-$\displaystyle \sum{S}$ & \verb"\sum{S}" & \verb"reduce add 0 S"\\
-$\overset{f}{\underset{x \in S}{\reduce}}{e}_{bc}$ & \verb"\reduce_{x <- S}^{f}{e}_{bc}" & \verb"reduce f bc (map (fn x => e) S)"\\
+$\displaystyle \sum_{p \in S}{e}$ & \verb"reduce (.<e .: p <- S>.) (#+) 0" & \verb"reduce add 0 (map (fn p => e) S)"\\
 \hline
 \end{tabular}
 
@@ -38,13 +36,11 @@ $\{p \in S \mid e\}$ & \verb".{p <- S .| e}." & \verb"filter (fn p => e) S"\\
 $S_1 \cup S_2$ & \verb"S1 @ S2" & \verb"union (S1, S2)"\\
 $S_1 \cap S_2$ & \verb"S1 & S2" & \verb"intersection (S1, S2)"\\
 $S_1 \backslash S_2$ & \verb"S1 \ S2" & \verb"different(S1, S2)"\\
-$\displaystyle \sum_{p \in S}{e}$ & \verb"sum({e \: p <- S})" & \verb"reduce add 0 (map (fn p => e) (toSeq S))"\\
-$\displaystyle \sum{S}$ & \verb"sum(S)" & \verb"reduce add 0 (toSeq S)"\\
-$\overset{f}{\underset{x \in S}{\reduce}}{e}_{bc}$ & \verb"\reduce_{x \in S}^{f}{e}_{bc}" & \verb"reduce f bc (map (fn x => e) S)"\\
+$\displaystyle \sum_{p \in S}{e}$ & \verb"sum(.{e .: p <- S}.)" & \verb"reduce add 0 (map (fn p => e) (toSeq S))"\\
 \hline
 \end{tabular}
 
-\subsection{Tables}
+\subsection{TODO: Tables}
 
 \begin{tabular}{| l l l |}
 \hline
