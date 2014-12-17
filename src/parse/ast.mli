@@ -1,3 +1,8 @@
+(* Author: Akshay Nanavati (ananavat@andrew.cmu.edu)
+ *
+ * AST module for Ludwig.
+ *)
+
 type ident = Symbol.symbol
 
 type binop =

@@ -1,3 +1,8 @@
+(* Author: Akshay Nanavati (ananavat@andrew.cmu.edu)
+ *
+ * A module for generating SML code from the Ludwig AST
+ *)
+
 let extension = ".sml"
 
 let compile_script fname =

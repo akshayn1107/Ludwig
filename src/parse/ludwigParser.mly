@@ -1,3 +1,8 @@
+(* Author: Akshay Nanavati (ananavat@andrew.cmu.edu)
+ *
+ * Parser for Ludwig, compiled by ocamlyacc.
+ *)
+
 %{
 module A = Ast
 

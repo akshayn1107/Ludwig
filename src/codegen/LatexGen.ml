@@ -1,3 +1,7 @@
+(* Author: Akshay Nanavati (ananavat@andrew.cmu.edu)
+ *
+ * A module for generating latex code from the Ludwig AST
+ *)
 let extension = ".tex"
 
 let compile_script fname = ();;
