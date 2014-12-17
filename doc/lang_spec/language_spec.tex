@@ -64,13 +64,246 @@
 
 \clearpage
 
-\input{lang_spec_source.tex}
+\section{Ludwig Language Specification}
 
-\input{translation_source.tex}
+\subsection{Tokens}
 
-\input{coding.tex}
+%\begin{figure}
+\begin{small}
+\begin{tabular}{lcl}
+\term{ident}      &::=& \verb"[A-Za-z_][A-Za-z0-9_]*[']*"\\
+\term{num}        &::=& \tok{decnum}\\
+\\
+\tok{decnum}    &::=& \verb"0 | [1-9][0-9]*"\\
+\\
+\tok{integer binary operators}
+&::=& \verb"-  +  *  /  %"   \\
+\\
+\tok{comparison operators}
+&::=& \verb"<  >  >= <= ==  !=" \\
+\\
+\tok{boolean binary operators}
+&::=& \verb"and  or"\\
+\\
+\tok{other operators}
+&::=& \verb"\  @  &" \\
+\\
+\tok{constructors}
+&::=& \verb".<  >.  .{  }."\\
+\\
+\tok{reserved keywords}
+&::=& \verb"let  val  in  end  case  of  fun  \in" \\
+&   & \verb"inf"  \\
+\\
+\end{tabular}
+\end{small}
 
-\input{developing.tex}
+\medskip
+Terminals referenced in the grammar are in \term{bold}.
+Other classifiers not referenced within the grammar are
+in \tok{angle brackets and in italics}. \term{ident} and \tok{decnum} are described using
+regular expressions.\\
+%\caption{Lexical Tokens}
+%\label{fig:tokens}
+%\end{figure}
+
+\subsection{Abstract Syntax}
+\begin{tabular}{| c c c |}
+\hline
+\term{e} := & &\\
+& $e_1$ \term{binop} $e_2$ & Arithmetic Operation\\
+& $e_1$ \term{boolop} $e_2$ & Boolean Operation\\
+& $e_1(e_2)$ & Function Call\\
+& \tok{let} $s_1...s_n$ \tok{in} $e$ \tok{end} & See \ref{otherexp}\\
+& $e_1[e_2]$ & $e_2$'th element from $e_1$\\
+& $\#$\term{binop} & Equivalent to \verb|op+| etc in SML\\
+& $(e_1, ..., e_n)$ & Tuple\\
+& $e_1$ \verb"||" $e_2$ & Parallel evaluation\\
+& \tok{case} $e$ \tok{of} $e_1$ \verb"=>" $p_1 | ... | e_n$ \verb"=>" $p_n$ \tok{end} & See \ref{otherexp}\\
+& $\langle e_1, ..., e_n \rangle$ & Sequence constructor\\
+& $\langle e_1 : e_2 \in e_3 \rangle$ & See \ref{otherexp}\\
+& $\langle e_1 \in e_2 \mid e_3\rangle$ & See \ref{otherexp}\\
+& \term{ident} & Variable\\
+& \term{num} & Number\\
+\hline
+\term{s} := & &\\
+& \tok{val} $e_1$ = $e_2$ & Assignment\\
+& \tok{fun} \term{ident}$(e_1, ..., e_n)$ = $e$ & Function declaration\\
+\hline
+\end{tabular}
+
+\section{Translating Ludwig Syntax}
+
+\subsection{Sequences}
+
+\begin{tabular}{| l l l |}
+\hline
+\textbf{Pseudocode} & \textbf{Ludwig Syntax} & \textbf{SML Syntax}\\
+\hline
+$S[i]$ & \verb"S[i]" & \verb"nth S i"\\
+$|S|$ & \verb"|S|" & \verb"length(S)"\\
+$\langle \rangle$ & \verb".<>." & \verb"empty ()"\\
+$\langle e \rangle$ & \verb".<e>." & \verb"singleton e"\\
+$\langle e_1, e_2, e_3, e_4 \rangle$ & \verb".<e1, e2, e3, e4>." & \verb"fromList [e1, e2, e3, e4]"\\
+$\langle i...j \rangle$ & \verb".<i...j>." & \verb"tabulate (fn k => k + i) (j - i + 1)"\\
+$\langle e : p \in S \rangle$ & \verb".<e .: p <- S>." & \verb"map (fn p => e) S"\\
+$\langle p \in S \mid e \rangle$ & \verb".<p <- S .| e>." & \verb"filter (fn p => e) S"\\
+$\langle e : i \in \langle 0...n - 1 \rangle \rangle$ & \verb".<e .: i <- .<0...n - 1>.>." & \verb"tabulate (fn i => e) n"\\
+$\langle e1 : p \in S \mid e2 \rangle$ & \verb".<e1 .: p <- S .| e2>." & \verb"map (fn p => e) (filter (fn p => e) S)"\\
+$S_1 @ S_2$ & \verb"S1 @ S2" & \verb"append S1 S2"\\
+$\displaystyle \sum_{p \in S}{e}$ & \verb"reduce (.<e .: p <- S>.) (#+) 0" & \verb"reduce add 0 (map (fn p => e) S)"\\
+\hline
+\end{tabular}
+
+\subsection{Sets}
+
+\begin{tabular}{| l l l |}
+\hline
+\textbf{Pseudocode} & \textbf{Ludwig Syntax} & \textbf{SML Syntax}\\
+\hline
+$|S|$ & \verb"|S|" & \verb"length(S)"\\
+$e \in S$ & \verb"e <- S" & \verb"find S e"\\
+$\{\}$ & \verb".{}." & \verb"empty ()"\\
+$\{e\}$ & \verb".{e}." & \verb"singleton e"\\
+$\{e_1, e_2, e_3, e_4\}$ & \verb".{e1, e2, e3, e4}." & \verb"fromSeq (fromList [e1, e2, e3, e4])"\\
+$\{p \in S \mid e\}$ & \verb".{p <- S .| e}." & \verb"filter (fn p => e) S"\\
+$S_1 \cup S_2$ & \verb"S1 @ S2" & \verb"union (S1, S2)"\\
+$S_1 \cap S_2$ & \verb"S1 & S2" & \verb"intersection (S1, S2)"\\
+$S_1 \backslash S_2$ & \verb"S1 \ S2" & \verb"different(S1, S2)"\\
+$\displaystyle \sum_{p \in S}{e}$ & \verb"sum(.{e .: p <- S}.)" & \verb"reduce add 0 (map (fn p => e) (toSeq S))"\\
+\hline
+\end{tabular}
+
+\subsection{Tables}
+
+\begin{tabular}{| l l l |}
+\hline
+\textbf{Pseudocode} & \textbf{Ludwig Syntax} & \textbf{SML Syntax}\\
+\hline
+$T[k]$ & \verb"T[k]" & \verb"valOf (find k T)"\\
+$|T|$ & \verb"|T|" & \verb"size T"\\
+$k \in T$ & \verb"k <- T" & \verb"find T k <> None"\\
+$\{\}$ & \verb".{}." & \verb"empty ()"\\
+$\{k \mapsto v\}$ & \verb".{k -> v}." & \verb"singleton (k, v)"\\
+$\{k_1 \mapsto v_1, k_2 \mapsto v_2\}$ & \verb".{k1 -> v1, k2 -> v2}." & \verb"fromSeq (fromList [(k1, v1), (k2, v2)])"\\
+$\{e : v \in T\}$ & \verb".{e .: v <- T}." & \verb"map (fn v => e) T"\\
+$\{e : (k \mapsto v) \in T\}$ & \verb".{e .: (k -> v) <- T}." & \verb"mapk (fn (k, v) => e) T"\\
+$\{k \mapsto v : k \in S\}$ & \verb".{k -> v .: k <- S}." & \verb"tabulate (fn k => v) S"\\
+$\{v \mid v \in T, e\}$ & \verb".{v .| v <- T.e}." & \verb"filter (fn v => e) T"\\
+$\{v \mid (k \mapsto v) \in T, e\}$ & \verb".{v .| (k -> v) <- T.e}." & \verb"filterk (fn (k, v) => e) T"\\
+$\texttt{domain}(T)$ & \verb"domain(T)" & \verb"domain T"\\
+$\texttt{range}(T)$ & \verb"range(T)" & \verb"range T"\\
+$T_1 \cup T_2$ & \verb"T1 + T2" & \verb"merge (fn (k1, k2) => k2) (T1, T2)"\\
+$T_1 \cap T_2$ & \verb"T1 & T2" & \verb"extract (T1, T2)"\\
+$T_1 \backslash T_2$ & \verb"T1 \ T2" & \verb"erase(T1, T2)"\\
+$\displaystyle \sum{T}$ & \verb"\sum{T}" & \verb"reduce add 0 (T)"\\
+\hline
+\end{tabular}
+
+\subsection{Graphs}
+
+Creating a graph datatype would be very important for Ludwig because it would allow a programmer to describe graph algorithms without worrying about the underlying implementation. Two common representation of graphs are as an adjacency matrix or an adjacency table. If the user writes a graph algorithm with input type table, the cost evaluator would have no idea that each value is actually a subset of the keys. However, if it knew the input type was an abstract graph, it would be able to make better size inferences on the datatype. Furthermore, the user could specify different graph implementations when running the cost analyzer to see how different implementations effect cost.
+
+\section{Coding in Ludwig}
+
+All data structure operations are described above in the translation tables. Here, we describe other expressions and their meaning in the language. Unless otherwise stated, $e_i$ represents an arbitrary expression.
+
+\subsection{Operators}
+\begin{tabular}{| l l |}
+\hline
+\textbf{Expression} & \textbf{Meaning}\\
+\hline
+$e_1$ \verb|+| $e_2$ & Numerical addition\\
+$e_1$ \verb|*| $e_2$ & Numerical multiplication\\ 
+$e_1$ \verb|/| $e_2$ & Numerical divide\\
+$e_1$ \verb|%| $e_2$ & Numerical modulo\\ 
+$e_1$ \verb|\| $e_2$ & Set difference\\
+$e_1$ \verb|@| $e_2$ & Set union\\
+$e_1$ \verb|&| $e_2$ & Set intersection\\
+$e_1$ \verb|and| $e_2$ & Boolean and\\
+$e_1$ \verb|or| $e_2$ & Boolean or\\
+\hline
+\end{tabular}
+
+\subsection{Other Expressions}
+\label{otherexp}
+\verb|let val x1 = | $e_1$ \verb| ... val xn = | $e_n$ \verb|in e|\\
+
+SML-like let statement where \verb|xi| are all valid identifiers and $e_i$ are valid expressions. This expression evaluates $e$ given the variable bindings within \verb|let...in|. Note that variables are only scoped within their given \verb|let...in| statement.\\
+
+\verb|case | $e$ \verb| of p1 => | $e_1$ \verb" | ... | pn => " $e_n$ \verb| end|\\
+
+This is a case statement which pattern matches $e$ to the patterns \verb|pi| picking the first branch that hits and executing the given expression. Note that unlike SML, case statements in Ludwig are terminated by an end. Right now, valid patters are identifiers or potentially nested tuples of identifiers. Because the language is not type checked, other valid patterns may compile but will probably produce bad code.\\
+
+\verb|inf/-inf|\\
+
+Represents positive/negative infinity, or max int/min int respectively.\\
+
+\verb|#+, #*, #/, #-, #@, #&|\\
+
+The \verb|#| token takes a binary operator and returns a binary function which takes two inputs and returns an output. This behaves exactly like \verb|op| in SML. Useful to pass as arguments to \verb|map| or \verb|reduce| operations. For example, \verb|x + y| is equivalent to saying \verb|#+(x, y)|.
+
+\section{Developing Ludwig}
+
+Fork https://github.com/akshayn1107/Ludwig and clone it to get all the source files.
+
+\subsection{Directory Structure}
+
+\verb|doc/lang_spec/| - Source files for this document.\\
+
+\verb|src/| - Source files for the Ludwig Compiler\\
+\ind \verb|bin/| - Location of compiled Ludwig compiler\\
+\ind \ind \verb|db_ludwig| - A shell script which sets some OCAML flags to run the compiler in debug mode. Currently this just prints out the parse tree at each parse state when the mlyacc parses the file\\
+\ind \verb|codegen/| - The language generation files for Ludwig. So far only contains a translator for Latex and SML\\
+\ind \verb|parse/| - Contains the lexer, parser, and ast modules for the compiler\\
+\ind \verb|top/| - Contains the top level entry function into the compiler (\verb|top.ml|)\\
+\ind \verb|util/| - Contains utility modules used throughout the compiler code\\
+\ind \verb|Makefile| - Compiles the ludwig source code. See \ref{compilation} for more details\\
+
+\subsection{Codegen}
+
+Writing translations from Ludwig to other languages is not too difficult. It simply requires writing a module which exports a \verb|generate : stm list -> string| function which pretty prints source code. Then \verb|top/top.ml| must be updated to call this new generate function.
+
+\subsection{Adding Language Features}
+
+Depending on the scope of the feature, different portions of the compiler may need to be updated. This tutorial will show how to add a new unary operator \verb|!| to the language which acts as a no-op.\\
+
+First, \verb|src/parse/ludwigLexer.mll| must register \verb|!| as a valid token. We can then add this token (lets call it NOOP) to the list of tokens in \verb|src/parse/ludwigParser.mly|. Now, we must create an AST node for this new operator. Because this operator is an expression, we will add a field to the \verb|exp| datatype. Note that the signature must be updated as well. We will add \verb|NOOP of exp| to the datatype. Now, we may add this operator into the syntax of the language. We can do this by extending the grammar to adding:
+\verb"| NOOP exp { marke (A.NOOP($2)) (1, 2) }" to the exp list.\\
+
+Now, all thats left to do is to augment the code generation modules to translate this new operator correctly.\\
+
+\subsection{Compiling}
+\label{compilation}
+Run \verb|make ludwig| in order to get the binary in \verb|bin/ludwig|.
+
+\subsection{Compiling Ludwig Source}
+Once the ludwig compiler has been built, source code can be compiled. Either run:\\
+
+\verb|bin/ludwig [OPTIONS] <source_file.lud>| or\\
+\verb|bin/db_ludwig [OPTIONS] <source_file.lud>|.\\
+
+Options are listed below:
+
+\begin{itemize}
+\item \verb|-v, --verbose| print messages at each stage of compilation
+\item \verb|--debug-parse| debug the parser
+\end{itemize}
+
+\section{Running Generated Code}
+
+\subsection{SML}
+
+The output of Ludwig for SML is the following:
+\begin{itemize}
+\item Makefile
+
+\item SML source file
+
+\item CM file which gets compiled by the makefile and loaded into the SML REPL.
+\end{itemize}
+
+In order to run the SML code, the 210 libraries must be linked in the same directory as you are running make in (alternatively, change the path in the CM file). Running \verb|make| will start the SML REPL and load the compiled module. All Ludwig functions are now within the Ludwig structure and can be accessed in the REPL as normal. The 210 standard library will also be loaded.
 
 %\input{ast_source.tex}
 
